@@ -113,9 +113,12 @@ function App() {
     (project) => project.id === projectsState.selectedProjectId
   );
 
-  const selectedProjectTasks = selectedProject !== undefined ? projectsState.projectsDetails.tasks.filter(
-    (task) => task.projectId === selectedProject.id
-  ) : [];
+  const selectedProjectTasks =
+    selectedProject !== undefined
+      ? projectsState.projectsDetails.tasks.filter(
+          (task) => task.projectId === selectedProject.id
+        )
+      : [];
 
   let content = (
     <SelectedProject
