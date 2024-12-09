@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --deleteRed: #f74444;
+  --text-white: #fff;
+}
+
+/* Tooltip CSS Starts */
+.styles-module_dark__xNqje {
+  background: #000 !important;
+}
+.styles-module_tooltip__mnnfp {
+  padding: 4px 12px !important;
+  border-radius: 6px !important;
+}
+/* Tooltip CSS Ends */
+
+.projectAdded:hover .projectOptions {
+  display: flex;
+}
+svg {
+  color: var(--text-white);
+  width: 18px;
+  height: auto;
+}
+.projectOptions .editOption:hover .onHover,
+.projectOptions .deleteOption:hover .onHover,
+.taskDeleteOption:hover .onHover {
+  display: block;
+}
+.projectOptions .deleteOption:hover .onHover,
+.taskDeleteOption:hover .onHover {
+  color: var(--deleteRed);
+}
+.projectOptions .editOption:hover .onNormal,
+.projectOptions .deleteOption:hover .onNormal,
+.taskDeleteOption:hover:hover .onNormal {
+  display: none;
+}

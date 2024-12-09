@@ -1,28 +1,21 @@
 import { forwardRef } from "react";
 
 const Input = forwardRef(
-  ({ labelName, id, isTextarea = false, ...props }, ref) => {
+  ({ labelName, id, isTextarea = false, isEditing, ...props }, ref) => {
     const classes =
       "w-full p-1 border-b-2 rounded-sm border-stone-300 bg-stone-200 text-stone-600 focus:outline-none focus:border-stone-600";
 
-    function handleSelectionDates() {
-      var todayDate = new Date();
-      var month = todayDate.getMonth() + 1;
-      var date = todayDate.getDate();
-      var year = todayDate.getFullYear();
-      month < 10 ? (month = "0" + month.toString()) : (month = month);
-      date < 10 ? (date = "0" + date.toString()) : (date = date);
-      var maxDate = year + "-" + month + "-" + date;
-
-      if (id !== undefined) {
-        document.getElementById(id).setAttribute("min", maxDate);
-        document.getElementById(id).value = maxDate;
-      }
+    function getCurrentDate() {
+      const todayDate = new Date();
+      const month = todayDate.getMonth() + 1;
+      const date = todayDate.getDate();
+      const year = todayDate.getFullYear();
+      return `${year}-${month < 10 ? "0" + month : month}-${
+        date < 10 ? "0" + date : date
+      }`;
     }
 
-    setTimeout(() => {
-      handleSelectionDates();
-    }, 10);
+    const defaultDateValue = isEditing?.dueDate || getCurrentDate();
 
     return (
       <p className="flex flex-col gap-1 my-4">
@@ -32,7 +25,14 @@ const Input = forwardRef(
         {isTextarea ? (
           <textarea ref={ref} className={classes} {...props} />
         ) : (
-          <input ref={ref} className={classes} id={id} {...props} />
+          <input
+            ref={ref}
+            className={classes}
+            id={id}
+            {...props}
+            defaultValue={defaultDateValue}
+            min={getCurrentDate()}
+          />
         )}
       </p>
     );
