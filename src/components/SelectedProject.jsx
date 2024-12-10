@@ -1,6 +1,7 @@
+import Button from "./Button";
 import Tasks from "./Tasks";
 
-const SelectedProject = ({ project, onAddTask, onDeleteTask, tasks }) => {
+const SelectedProject = ({ project, onAddTask, onDeleteTask, tasks, onBack }) => {
   const formattedDate = new Date(project.dueDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -8,7 +9,10 @@ const SelectedProject = ({ project, onAddTask, onDeleteTask, tasks }) => {
   });
 
   return (
-    <div className="w-[35rem] mt-16">
+    <div className="w-[35rem] mt-5">
+      <div className="mb-8">
+        <Button onClick={onBack} type="cancel">Cancel</Button>
+      </div>
       <header className="pb-4 mb-4 border-b-2 border-x-stone-300">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold text-stone-600">{project.title}</h1>

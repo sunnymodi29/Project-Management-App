@@ -2,8 +2,9 @@ import { forwardRef } from "react";
 
 const Input = forwardRef(
   ({ labelName, id, isTextarea = false, isEditing, ...props }, ref) => {
-    const classes =
-      "w-full p-1 border-b-2 rounded-sm border-stone-300 bg-stone-200 text-stone-600 focus:outline-none focus:border-stone-600";
+    // const classes = "w-full p-1 border-b-2 rounded-sm border-stone-300 bg-stone-200 text-stone-600 focus:outline-none focus:border-stone-600";
+
+    const classes = "addNewTaskInput w-full px-2 py-2 rounded-md bg-stone-100 transition-all border-2 border-stone-400 focus:bg-stone-50"
 
     function getCurrentDate() {
       const todayDate = new Date();

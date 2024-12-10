@@ -19,7 +19,7 @@ const Tasks = ({ onAdd, onDelete, tasks }) => {
               className="flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2"
             >
               <span className="taskTitle w-full truncate ">{task.text}</span>
-              <button onClick={() => onDelete(task.id)}>
+              <button onClick={() => onDelete(task.id, task.text)}>
                 <span
                   className="taskDeleteOption cursor-pointer"
                   data-tooltip-id="taskDelete_tooltip"

@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import NewProject from "./components/NewProject";
 import NoProjectSelected from "./components/NoProjectSelected";
 import ProjectsSidebar from "./components/ProjectsSidebar";
 import SelectedProject from "./components/SelectedProject";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import Toastify from "./components/Toastify";
 
 function App() {
   const [projectsState, setProjectsState] = useState({
@@ -18,6 +18,13 @@ function App() {
   const [editedProject, setEditedProject] = useState();
 
   function handleAddTask(text) {
+    if (!text) {
+      Toastify({
+        toastType: "error",
+        message: "Empty Task Addition Not Permitted!",
+      });
+      return;
+    }
     setProjectsState((prevState) => {
       const newTask = {
         text: text,
@@ -34,8 +41,7 @@ function App() {
       );
 
       if (!isDuplicate) {
-        const SuccessNotify = () => toast.success("Task Added Successfully!");
-        SuccessNotify();
+        Toastify({ toastType: "success", message: "Task Added Successfully!" });
         return {
           ...prevState,
           projectsDetails: {
@@ -44,15 +50,20 @@ function App() {
           },
         };
       } else {
-        const ErrorNotify = () =>
-          toast.error("Duplicate Task Addition Not Permitted!");
-        ErrorNotify();
+        Toastify({
+          toastType: "error",
+          message: "Duplicate Task Addition Not Permitted!",
+        });
         return prevState;
       }
     });
   }
 
-  function handleDeleteTask(id) {
+  function handleDeleteTask(id, text) {
+    Toastify({
+      toastType: "success",
+      message: `Task "${text}" Deleted Successfully`,
+    });
     setProjectsState((prevState) => {
       return {
         ...prevState,
@@ -62,6 +73,15 @@ function App() {
             (task) => task.id !== id
           ),
         },
+      };
+    });
+  }
+
+  function handleBack() {
+    setProjectsState((prevState) => {
+      return {
+        ...prevState,
+        selectedProjectId: undefined,
       };
     });
   }
@@ -86,8 +106,14 @@ function App() {
   }
 
   function handleAddProject(projectData, isAdd) {
-    !isAdd
-      ? setProjectsState((prevState) => {
+    if (!isAdd) {
+      Toastify({
+        toastType: "success",
+        message: "Project Addedd Successfully!",
+      });
+
+      setTimeout(() => {
+        setProjectsState((prevState) => {
           const newProject = {
             ...projectData,
             id: Math.random() * 10,
@@ -101,12 +127,15 @@ function App() {
               tasks: [...prevState.projectsDetails.tasks],
             },
           };
-        })
-      : setProjectsState((prevState) => {
-          return {
-            ...projectData,
-          };
         });
+      }, 0);
+    } else {
+      setProjectsState((prevState) => {
+        return {
+          ...projectData,
+        };
+      });
+    }
   }
 
   function handleCancelAddProject(id) {
@@ -119,6 +148,8 @@ function App() {
   }
 
   function handleEditProject(projectData, projectId) {
+    Toastify({ toastType: "success", message: "Project Edited Successfully!" });
+
     setProjectsState((prevState) => {
       const updatedProjects = prevState.projectsDetails.projects.map(
         (project) =>
@@ -152,6 +183,8 @@ function App() {
   }
 
   function handleDeleteProject(selectedProjectId) {
+    Toastify({ toastType: "success", message: "Project Deleted Successfully!" });
+
     setProjectsState((prevState) => {
       return {
         ...prevState,
@@ -199,6 +232,7 @@ function App() {
       onAddTask={handleAddTask}
       onDeleteTask={handleDeleteTask}
       tasks={selectedProjectTasks}
+      onBack={handleBack}
     />
   );
 
@@ -228,7 +262,7 @@ function App() {
       {content}
       <ToastContainer
         position="top-right"
-        autoClose={1200}
+        autoClose={1500}
         hideProgressBar
         newestOnTop
         closeOnClick

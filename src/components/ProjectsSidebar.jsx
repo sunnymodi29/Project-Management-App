@@ -36,7 +36,7 @@ function ProjectsSidebar({
         <ul className="mt-4">
           {projects.map((project) => {
             let cssClasses =
-              "projectAdded w-full text-left px-2 py-2 rounded-sm hover:text-stone-200 hover:bg-stone-800 overflow-hidden flex justify-between align items-center";
+              "projectAdded w-full text-left px-2 py-2 rounded-sm hover:text-stone-200 hover:bg-stone-800 overflow-hidden flex justify-between align items-center cursor-pointer";
 
             if (project.id === selectedProjectId) {
               cssClasses += " bg-stone-800 text-stone-200";
@@ -46,9 +46,9 @@ function ProjectsSidebar({
 
             return (
               <li key={project.id} id={project.id} className="relative">
-                <button className={cssClasses}>
+                <div className={cssClasses}>
                   <span
-                    className="projectTitle w-4/5"
+                    className="projectTitle w-4/5 truncate"
                     onClick={() => onSelectProject(project.id)}
                   >
                     {project.title}
@@ -121,7 +121,7 @@ function ProjectsSidebar({
                     </span>
                     <Tooltip id="delete_tooltip" />
                   </div>
-                </button>
+                </div>
               </li>
             );
           })}

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import Input from "./Input";
 import Modal from "./Modal";
+import Toastify from "./Toastify";
+import Button from "./Button";
 
 const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
   const modal = useRef();
@@ -41,7 +43,11 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
       currentDescription.trim() === "" ||
       currentDueDate.trim() === ""
     ) {
-      modal.current.open();
+      // modal.current.open();
+      Toastify({
+        toastType: "error",
+        message: "Please make sure you fill out all input fields.",
+      });
       return;
     }
 
@@ -69,20 +75,11 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
       <div className="w-[35rem] mt-16">
         <menu className="flex items-center justify-end gap-4 my-4">
           <li>
-            <button
-              className="text-stone-800 delay-75 hover:text-white hover:bg-stone-700 px-6 rounded-md border-2 border-gray-900 h-9"
-              onClick={onCancel}
-            >
-              Cancel
-            </button>
+            <Button onClick={onCancel} type="cancel">Cancel</Button>
           </li>
           <li>
-            <button
-              className="px-6 py-1 rounded-md bg-stone-800 text-stone-50 hover:bg-stone-950 h-9"
-              onClick={handleSaveProject}
-            >
-              Save
-            </button>
+            <Button onClick={handleSaveProject} type="save">Save</Button>
+
           </li>
         </menu>
         <div>
@@ -91,12 +88,14 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             labelName="Title"
             ref={titleRef}
             isEditing={startEdit}
+            placeholder="Enter Project Title"
           />
           <Input
             labelName="Description"
             isTextarea
             ref={descRef}
             isEditing={startEdit}
+            placeholder="Enter Project Description"
           />
           <Input
             type="date"
