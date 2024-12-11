@@ -6,7 +6,7 @@ const Input = forwardRef(
       "addNewTaskInput w-full px-2 py-2 rounded-md bg-stone-100 transition-all border-2 border-stone-400 focus:bg-stone-50";
 
     const getCurrentDate = () => {
-      // const today = new Date();
+      const today = new Date();
       // const month = todayDate.getMonth() + 1;
       // const date = todayDate.getDate();
       // const year = todayDate.getFullYear();
