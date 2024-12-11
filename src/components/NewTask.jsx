@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Toastify from "./Toastify";
 import Button from "./Button";
 
 const NewTask = ({ onAdd }) => {

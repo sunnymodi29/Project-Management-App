@@ -77,6 +77,50 @@ function App() {
     });
   }
 
+  function handleEditTask(taskId, editedTaskText) {
+    if (!editedTaskText) {
+      Toastify({
+        toastType: "error",
+        message: "Task Edit Cannot Be Empty!",
+      });
+      return;
+    }
+    setProjectsState((prevState) => {
+      const isDuplicateTask = prevState.projectsDetails.tasks.find(
+        (task) =>
+          task.text === editedTaskText &&
+          task.id !== taskId &&
+          task.projectId === prevState.selectedProjectId
+      );
+
+      if (!isDuplicateTask) {
+        const updatedTasks = prevState.projectsDetails.tasks.map((task) =>
+          task.id === taskId && task.projectId === prevState.selectedProjectId
+            ? { ...task, text: editedTaskText }
+            : task
+        );
+
+        Toastify({
+          toastType: "success",
+          message: "Task Edited Successfully!",
+        });
+        return {
+          ...prevState,
+          projectsDetails: {
+            ...prevState.projectsDetails,
+            tasks: updatedTasks,
+          },
+        };
+      } else {
+        Toastify({
+          toastType: "error",
+          message: "Duplicate Task Not Permitted!",
+        });
+        return prevState;
+      }
+    });
+  }
+
   function handleBack() {
     setProjectsState((prevState) => {
       return {
@@ -183,7 +227,10 @@ function App() {
   }
 
   function handleDeleteProject(selectedProjectId) {
-    Toastify({ toastType: "success", message: "Project Deleted Successfully!" });
+    Toastify({
+      toastType: "success",
+      message: "Project Deleted Successfully!",
+    });
 
     setProjectsState((prevState) => {
       return {
@@ -231,6 +278,7 @@ function App() {
       project={selectedProject}
       onAddTask={handleAddTask}
       onDeleteTask={handleDeleteTask}
+      onEditTask={handleEditTask}
       tasks={selectedProjectTasks}
       onBack={handleBack}
     />

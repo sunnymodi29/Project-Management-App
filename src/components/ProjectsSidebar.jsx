@@ -2,6 +2,7 @@ import { useRef } from "react";
 import Button from "./Button";
 import Modal from "./Modal";
 import { Tooltip } from "react-tooltip";
+// import Options from "./Options";
 
 function ProjectsSidebar({
   onStartAddProject,
@@ -120,6 +121,13 @@ function ProjectsSidebar({
                       </svg>
                     </span>
                     <Tooltip id="delete_tooltip" />
+                    {/* <Options
+                      editFunction={handleEditProject}
+                      deleteFunction={onDelete}
+                      projectId={project.id}
+                      isEditOption={true}
+                      isDeleteOption={true}
+                    /> */}
                   </div>
                 </div>
               </li>

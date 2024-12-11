@@ -1,7 +1,7 @@
 import Button from "./Button";
 import Tasks from "./Tasks";
 
-const SelectedProject = ({ project, onAddTask, onDeleteTask, tasks, onBack }) => {
+const SelectedProject = ({ project, onAddTask, onDeleteTask, onEditTask, tasks, onBack }) => {
   const formattedDate = new Date(project.dueDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -23,8 +23,9 @@ const SelectedProject = ({ project, onAddTask, onDeleteTask, tasks, onBack }) =>
         </p>
       </header>
       <Tasks
-        onAdd={onAddTask}
-        onDelete={onDeleteTask}
+        onTaskAdd={onAddTask}
+        onTaskDelete={onDeleteTask}
+        onEditTask={onEditTask}
         tasks={tasks}
         selectedProject={project}
       />

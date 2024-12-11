@@ -75,31 +75,37 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
       <div className="w-[35rem] mt-16">
         <menu className="flex items-center justify-end gap-4 my-4">
           <li>
-            <Button onClick={onCancel} type="cancel">Cancel</Button>
+            <Button onClick={onCancel} type="cancel">
+              Cancel
+            </Button>
           </li>
           <li>
-            <Button onClick={handleSaveProject} type="save">Save</Button>
-
+            <Button onClick={handleSaveProject} type="save">
+              Save
+            </Button>
           </li>
         </menu>
         <div>
           <Input
             type="text"
             labelName="Title"
-            ref={titleRef}
+            isTextarea={false}
             isEditing={startEdit}
             placeholder="Enter Project Title"
+            ref={titleRef}
           />
           <Input
             labelName="Description"
             isTextarea
-            ref={descRef}
             isEditing={startEdit}
             placeholder="Enter Project Description"
+            ref={descRef}
           />
           <Input
             type="date"
             labelName="Due Date"
+            isEditing={false}
+            isTextarea={false}
             id="dateInput"
             ref={dueDateRef}
           />

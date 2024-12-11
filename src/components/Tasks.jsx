@@ -1,11 +1,39 @@
 import { Tooltip } from "react-tooltip";
 import NewTask from "./NewTask";
+import Modal from "./Modal";
+import { useRef, useState } from "react";
+import Input from "./Input";
 
-const Tasks = ({ onAdd, onDelete, tasks }) => {
+const Tasks = ({ onTaskAdd, onTaskDelete, onEditTask, tasks }) => {
+  const modal = useRef();
+  const taskTitleRef = useRef();
+  const [editedTaskText, setEditedTaskText] = useState("");
+  const [editingTaskId, setEditingTaskId] = useState(null);
+
+  function handleChange(event) {
+    setEditedTaskText(event.target.value);
+  }
+
+  function handleTaskEdit(taskId) {
+    const taskToEdit = tasks.find((task) => task.id === taskId);
+    if (taskToEdit) {
+      setEditedTaskText(taskToEdit.text);
+      setEditingTaskId(taskId);
+      modal.current.open();
+    }
+  }
+
+  function handleSaveEditedTask() {
+    onEditTask(editingTaskId, editedTaskText);
+    modal.current.close();
+    setEditingTaskId(null);
+    setEditedTaskText("");
+  }
+
   return (
     <section>
       <h2 className="text-2xl font-bold text-stone-700 mb-4">Tasks</h2>
-      <NewTask onAdd={onAdd} />
+      <NewTask onAdd={onTaskAdd} />
       {tasks && tasks.length === 0 && (
         <p className="text-stone-800 my-4">
           This project does not have any tasks yet.
@@ -16,10 +44,60 @@ const Tasks = ({ onAdd, onDelete, tasks }) => {
           {tasks.map((task) => (
             <li
               key={task.id}
-              className="flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2"
+              className="flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center"
             >
+              <Modal
+                ref={modal}
+                buttonCaption="Save"
+                isCancel={true}
+                onClick={handleSaveEditedTask}
+              >
+                <h2 className="text-xl font-bold text-stone-700 mb-4 pb-1 border-b-2 border-stone-300">
+                  Edit Task
+                </h2>
+                <Input
+                  type="text"
+                  labelName="Edit Task Name"
+                  ref={taskTitleRef}
+                  isEditing={undefined}
+                  placeholder="Enter Task Name"
+                  value={editedTaskText}
+                  onChange={handleChange}
+                />
+              </Modal>
               <span className="taskTitle w-full truncate ">{task.text}</span>
-              <span onClick={() => onDelete(task.id, task.text)}>
+              <span
+                className="taskEditOption cursor-pointer"
+                data-tooltip-id="taskEdit_tooltip"
+                data-tooltip-content="Edit"
+                data-tooltip-place="top"
+                onClick={() => handleTaskEdit(task.id)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="onNormal text-slate-700"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                  />
+                </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="hidden onHover text-stone-700"
+                >
+                  <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                </svg>
+              </span>
+              <Tooltip id="taskEdit_tooltip" />
+              <span onClick={() => onTaskDelete(task.id, task.text)}>
                 <span
                   className="taskDeleteOption cursor-pointer"
                   data-tooltip-id="taskDelete_tooltip"
