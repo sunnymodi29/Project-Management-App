@@ -18,14 +18,16 @@ import { v4 as uuid } from "uuid";
 
 const db = getFirestore(app);
 
+let intialObject = {
+  selectedProjectId: "",
+  projectsDetails: {
+    projects: [],
+    tasks: [],
+  },
+};
+
 function App() {
-  const [projectsState, setProjectsState] = useState({
-    selectedProjectId: "",
-    projectsDetails: {
-      projects: [],
-      tasks: [],
-    },
-  });
+  const [projectsState, setProjectsState] = useState(intialObject);
 
   const [editedProject, setEditedProject] = useState();
   const [isLoading, setIsLoading] = useState(true);
@@ -345,7 +347,7 @@ function App() {
         const clearFirestoreData = async () => {
           try {
             const docRef = doc(db, "projectsData", "projectsDataDoc");
-            await setDoc(docRef, projectsState);
+            await setDoc(docRef, intialObject);
           } catch (error) {
             console.error(error);
           }
