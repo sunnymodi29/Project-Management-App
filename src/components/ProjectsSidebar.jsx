@@ -91,7 +91,7 @@ function ProjectsSidebar({
                       data-tooltip-id="delete_tooltip"
                       data-tooltip-content="Delete"
                       data-tooltip-place="top"
-                      onClick={() => onDelete(project.id)}
+                      onClick={() => onDelete(project.id, project.title)}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

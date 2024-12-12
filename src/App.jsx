@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import NewProject from "./components/NewProject";
 import NoProjectSelected from "./components/NoProjectSelected";
 import ProjectsSidebar from "./components/ProjectsSidebar";
@@ -6,9 +6,21 @@ import SelectedProject from "./components/SelectedProject";
 import { ToastContainer } from "react-toastify";
 import Toastify from "./components/Toastify";
 
+import {
+  getFirestore,
+  doc,
+  updateDoc,
+  setDoc,
+  getDoc,
+} from "firebase/firestore";
+import app from "./firebase/firebase-config";
+import { v4 as uuid } from "uuid";
+
+const db = getFirestore(app);
+
 function App() {
   const [projectsState, setProjectsState] = useState({
-    selectedProjectId: undefined,
+    selectedProjectId: "",
     projectsDetails: {
       projects: [],
       tasks: [],
@@ -16,6 +28,61 @@ function App() {
   });
 
   const [editedProject, setEditedProject] = useState();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch data from Firestore on initial render/reload
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const docRef = doc(db, "projectsData", "projectsDataDoc");
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const fetchedData = docSnap.data();
+
+          const validatedState = {
+            selectedProjectId: fetchedData.selectedProjectId || "",
+            projectsDetails: {
+              projects: fetchedData.projectsDetails?.projects || [],
+              tasks: fetchedData.projectsDetails?.tasks || [],
+            },
+          };
+          setProjectsState(validatedState);
+        } else {
+          const docRef = doc(db, "projectsData", "projectsDataDoc");
+          await setDoc(docRef, projectsState);
+
+          setProjectsState(projectsState);
+        }
+      } catch (error) {
+        console.error("Error fetching data from Firestore:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Update Firestore whenever projectsState changes
+  useEffect(() => {
+    const updateFirestore = async () => {
+      try {
+        const docRef = doc(db, "projectsData", "projectsDataDoc");
+        await updateDoc(docRef, projectsState);
+
+        console.log(projectsState);
+      } catch (error) {
+        console.error("Error updating Firestore:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (projectsState.projectsDetails.projects.length > 0) {
+      updateFirestore();
+    }
+  }, [projectsState]);
 
   function handleAddTask(text) {
     if (!text) {
@@ -25,11 +92,20 @@ function App() {
       });
       return;
     }
+
+    if (!projectsState.selectedProjectId) {
+      Toastify({
+        toastType: "error",
+        message: "No project selected to add the task.",
+      });
+      return;
+    }
+
     setProjectsState((prevState) => {
       const newTask = {
         text: text,
         projectId: prevState.selectedProjectId,
-        id: Math.random(),
+        id: uuid(),
       };
 
       const selectedProjectTasks = prevState.projectsDetails.tasks.filter(
@@ -125,18 +201,27 @@ function App() {
     setProjectsState((prevState) => {
       return {
         ...prevState,
-        selectedProjectId: undefined,
+        selectedProjectId: "",
       };
     });
   }
 
   function handleSelectedProject(id) {
-    setProjectsState((prevState) => {
-      return {
+    const isValidProject = projectsState.projectsDetails.projects.some(
+      (project) => project.id === id
+    );
+
+    if (isValidProject) {
+      setProjectsState((prevState) => ({
         ...prevState,
         selectedProjectId: id,
-      };
-    });
+      }));
+    } else {
+      Toastify({
+        toastType: "error",
+        message: "The selected project does not exist.",
+      });
+    }
   }
 
   function handleStartAddProject() {
@@ -146,38 +231,43 @@ function App() {
         selectedProjectId: null,
       };
     });
-    setEditedProject(undefined);
+    setEditedProject("");
   }
 
   function handleAddProject(projectData, isAdd) {
-    if (!isAdd) {
-      Toastify({
-        toastType: "success",
-        message: "Project Addedd Successfully!",
-      });
-
-      setTimeout(() => {
+    try {
+      if (!isAdd) {
         setProjectsState((prevState) => {
           const newProject = {
             ...projectData,
-            id: Math.random() * 10,
+            id: uuid(),
           };
 
           return {
             ...prevState,
-            selectedProjectId: undefined,
+            selectedProjectId: "",
             projectsDetails: {
               projects: [...prevState.projectsDetails.projects, newProject],
               tasks: [...prevState.projectsDetails.tasks],
             },
           };
         });
-      }, 0);
-    } else {
-      setProjectsState((prevState) => {
-        return {
-          ...projectData,
-        };
+
+        Toastify({
+          toastType: "success",
+          message: "Project Addedd Successfully!",
+        });
+      } else {
+        setProjectsState((prevState) => {
+          return {
+            ...projectData,
+          };
+        });
+      }
+    } catch (error) {
+      Toastify({
+        toastType: "error",
+        message: error,
       });
     }
   }
@@ -186,7 +276,7 @@ function App() {
     setProjectsState((prevState) => {
       return {
         ...prevState,
-        selectedProjectId: undefined,
+        selectedProjectId: "",
       };
     });
   }
@@ -206,7 +296,7 @@ function App() {
           ...prevState.projectsDetails,
           projects: updatedProjects,
         },
-        selectedProjectId: undefined,
+        selectedProjectId: "",
       };
     });
 
@@ -226,52 +316,64 @@ function App() {
     }));
   }
 
-  function handleDeleteProject(selectedProjectId) {
+  function handleDeleteProject(selectedProjectId, projectTitle) {
     Toastify({
       toastType: "success",
-      message: "Project Deleted Successfully!",
+      message: `Project "${projectTitle}" Deleted Successfully!`,
     });
 
     setProjectsState((prevState) => {
-      return {
+      const filteredProjects = prevState.projectsDetails.projects.filter(
+        (project) => project.id !== selectedProjectId
+      );
+
+      const filteredTasks = prevState.projectsDetails.tasks.filter(
+        (task) => task.projectId !== selectedProjectId
+      );
+
+      const updatedState = {
         ...prevState,
-        selectedProjectId: undefined,
+        selectedProjectId: "",
         projectsDetails: {
-          projects: prevState.projectsDetails.projects.filter(
-            (project) => project.id !== selectedProjectId
-          ),
-          tasks: prevState.projectsDetails.tasks.filter(
-            (task) => task.projectId !== selectedProjectId
-          ),
+          projects: filteredProjects,
+          tasks: filteredTasks,
         },
       };
+
+      if (filteredProjects.length === 0) {
+        // If no projects left, clear the Firestore document
+        const clearFirestoreData = async () => {
+          try {
+            const docRef = doc(db, "projectsData", "projectsDataDoc");
+            await setDoc(docRef, projectsState);
+          } catch (error) {
+            console.error(error);
+          }
+        };
+        clearFirestoreData();
+      }
+
+      return updatedState;
     });
   }
 
-  console.log(projectsState);
-
   function filterSelectedProject() {
-    if (projectsState) {
-      if (projectsState.projectsDetails.projects) {
-        const selectedProject = projectsState.projectsDetails.projects.find(
-          (project) => project.id === projectsState.selectedProjectId
-        );
+    if (!projectsState || !projectsState.projectsDetails.projects) return null;
 
-        return selectedProject;
-      }
-    } else {
-      return;
-    }
+    const selectedProject = projectsState.projectsDetails.projects.find(
+      (project) => project.id === projectsState.selectedProjectId
+    );
+
+    return selectedProject || null;
   }
 
   const selectedProject = filterSelectedProject();
 
-  const selectedProjectTasks =
-    selectedProject !== undefined
-      ? projectsState.projectsDetails.tasks.filter(
-          (task) => task.projectId === selectedProject.id
-        )
-      : [];
+  const selectedProjectTasks = selectedProject
+    ? projectsState.projectsDetails.tasks.filter(
+        (task) => task.projectId === selectedProject.id
+      )
+    : [];
 
   let content = (
     <SelectedProject
@@ -293,34 +395,42 @@ function App() {
         startEdit={editedProject}
       />
     );
-  } else if (projectsState.selectedProjectId === undefined) {
+  } else if (projectsState.selectedProjectId === "") {
     content = <NoProjectSelected onStartAddProject={handleStartAddProject} />;
   }
 
   return (
-    <main className="h-screen my-8 flex gap-8">
-      <ProjectsSidebar
-        onStartAddProject={handleStartAddProject}
-        projects={projectsState.projectsDetails.projects}
-        onSelectProject={handleSelectedProject}
-        selectedProjectId={projectsState.selectedProjectId}
-        onEdit={handleStartEditProject}
-        onDelete={handleDeleteProject}
-      />
-      {content}
-      <ToastContainer
-        position="top-right"
-        autoClose={1500}
-        hideProgressBar
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
-    </main>
+    <>
+      {isLoading && (
+        <div className="loader-overlay">
+          <div className="loader-spinner"></div>
+        </div>
+      )}
+
+      <main className="h-screen my-8 flex gap-8">
+        <ProjectsSidebar
+          onStartAddProject={handleStartAddProject}
+          projects={projectsState.projectsDetails.projects}
+          onSelectProject={handleSelectedProject}
+          selectedProjectId={projectsState.selectedProjectId}
+          onEdit={handleStartEditProject}
+          onDelete={handleDeleteProject}
+        />
+        {content}
+        <ToastContainer
+          position="top-right"
+          autoClose={1500}
+          hideProgressBar
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+        />
+      </main>
+    </>
   );
 }
 
