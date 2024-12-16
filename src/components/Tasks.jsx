@@ -3,12 +3,26 @@ import NewTask from "./NewTask";
 import Modal from "./Modal";
 import { useRef, useState } from "react";
 import Input from "./Input";
+import DropDown from "./DropDown";
 
-const Tasks = ({ onTaskAdd, onTaskDelete, onEditTask, tasks }) => {
+const Tasks = ({
+  onTaskAdd,
+  onTaskDelete,
+  onEditTask,
+  tasks,
+  updateTaskStatus,
+}) => {
   const modal = useRef();
   const taskTitleRef = useRef();
   const [editedTaskText, setEditedTaskText] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
+
+  const taskStatusList = new Map();
+  taskStatusList.set("Not Selected", "bg-stone-700");
+  taskStatusList.set("In Progress", "bg-blue-700");
+  taskStatusList.set("Completed", "bg-green-700");
+  taskStatusList.set("On Hold", "bg-red-700");
 
   function handleChange(event) {
     setEditedTaskText(event.target.value);
@@ -30,6 +44,12 @@ const Tasks = ({ onTaskAdd, onTaskDelete, onEditTask, tasks }) => {
     setEditedTaskText("");
   }
 
+  function toggleDropdown(taskId) {
+    activeDropdownId === taskId && activeDropdownId
+      ? setActiveDropdownId(null)
+      : setActiveDropdownId(taskId);
+  }
+
   return (
     <section>
       <h2 className="text-2xl font-bold text-stone-700 mb-4">Tasks</h2>
@@ -44,7 +64,7 @@ const Tasks = ({ onTaskAdd, onTaskDelete, onEditTask, tasks }) => {
           {tasks.map((task) => (
             <li
               key={task.id}
-              className="flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center"
+              className="tasksAdded flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center"
             >
               <Modal
                 ref={modal}
@@ -65,44 +85,70 @@ const Tasks = ({ onTaskAdd, onTaskDelete, onEditTask, tasks }) => {
                   onChange={handleChange}
                 />
               </Modal>
-              <span className="taskTitle w-full truncate ">{task.text}</span>
-              <span
-                className="taskEditOption cursor-pointer"
-                data-tooltip-id="taskEdit_tooltip"
-                data-tooltip-content="Edit"
-                data-tooltip-place="top"
-                onClick={() => handleTaskEdit(task.id)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="onNormal text-slate-700"
+
+              <span className="taskTitle w-10/12 truncate flex gap-3">
+                <span className="truncate">{task.text}</span>
+                <span
+                  className={`taskStatusValue ${taskStatusList.get(
+                    task.taskStatus
+                  )} select-none cursor-pointer px-2 py-1 rounded-md`}
+                  onClick={() => toggleDropdown(task.id)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-                  />
-                </svg>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="hidden onHover text-stone-700"
-                >
-                  <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
-                </svg>
+                  <span className="block text-xs text-white font-bold">
+                    {task.taskStatus}
+                  </span>
+                  {activeDropdownId === task.id && (
+                    <DropDown
+                      currentStatus={task.taskStatus}
+                      isOpenDropDown={activeDropdownId === task.id}
+                      setIsOpenDropDown={setActiveDropdownId}
+                      onStatusChange={(newStatus) =>
+                        updateTaskStatus(task.id, newStatus)
+                      }
+                      dropDownList={taskStatusList}
+                    />
+                  )}
+                </span>
               </span>
-              <Tooltip id="taskEdit_tooltip" />
-              <span onClick={() => onTaskDelete(task.id, task.text)}>
+
+              <div className="taskOptions mt-px gap-2 hidden flex">
+                <span
+                  className="taskEditOption cursor-pointer"
+                  data-tooltip-id="taskEdit_tooltip"
+                  data-tooltip-content="Edit"
+                  data-tooltip-place="top"
+                  onClick={() => handleTaskEdit(task.id)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="onNormal text-slate-700"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                    />
+                  </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="hidden onHover text-stone-700"
+                  >
+                    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                  </svg>
+                  <Tooltip id="taskEdit_tooltip" />
+                </span>
                 <span
                   className="taskDeleteOption cursor-pointer"
                   data-tooltip-id="taskDelete_tooltip"
                   data-tooltip-content="Delete"
                   data-tooltip-place="top"
+                  onClick={() => onTaskDelete(task.id, task.text)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -130,9 +176,43 @@ const Tasks = ({ onTaskAdd, onTaskDelete, onEditTask, tasks }) => {
                       clipRule="evenodd"
                     />
                   </svg>
+                  <Tooltip id="taskDelete_tooltip" />
                 </span>
-                <Tooltip id="taskDelete_tooltip" />
-              </span>
+              </div>
+              {/* <span
+                className="taskStatusOption cursor-pointer"
+                data-tooltip-id="taskStatus_tooltip"
+                data-tooltip-content="Status"
+                data-tooltip-place="top"
+                onClick={() => toggleDropdown(task.id)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="1.5"
+                  stroke="currentColor"
+                  className="onNormal text-slate-700"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
+                  />
+                </svg>
+                <Tooltip id="taskStatus_tooltip" />
+                {activeDropdownId === task.id && (
+                  <DropDown
+                    currentStatus={task.taskStatus}
+                    isOpenDropDown={activeDropdownId === task.id}
+                    setIsOpenDropDown={setActiveDropdownId}
+                    onStatusChange={(newStatus) =>
+                      updateTaskStatus(task.id, newStatus)
+                    }
+                    dropDownList={taskStatusList}
+                  />
+                )}
+              </span> */}
             </li>
           ))}
         </ul>

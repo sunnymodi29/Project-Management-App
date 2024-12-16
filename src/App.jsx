@@ -59,6 +59,12 @@ function App() {
       } catch (error) {
         console.error("Error fetching data from Firestore:", error);
       } finally {
+        // setProjectsState((prevState) => {
+        //   return {
+        //     ...prevState,
+        //     selectedProjectId: "",
+        //   };
+        // });
         setIsLoading(false);
       }
     };
@@ -108,6 +114,7 @@ function App() {
         text: text,
         projectId: prevState.selectedProjectId,
         id: uuid(),
+        taskStatus: "Not Selected",
       };
 
       const selectedProjectTasks = prevState.projectsDetails.tasks.filter(
@@ -197,6 +204,26 @@ function App() {
         return prevState;
       }
     });
+  }
+
+  function handleTaskStatus(taskId, taskStatus) {
+    setProjectsState((prevState) => {
+      const updatedTasks = prevState.projectsDetails.tasks.map((task) =>
+        task.id === taskId && task.projectId === prevState.selectedProjectId
+          ? { ...task, taskStatus: taskStatus }
+          : task
+      );
+
+      return {
+        ...prevState,
+        projectsDetails: {
+          ...prevState.projectsDetails,
+          tasks: updatedTasks,
+        },
+      };
+    });
+
+    console.log(taskId, taskStatus);
   }
 
   function handleBack() {
@@ -385,6 +412,7 @@ function App() {
       onEditTask={handleEditTask}
       tasks={selectedProjectTasks}
       onBack={handleBack}
+      updateTaskStatus={handleTaskStatus}
     />
   );
 
