@@ -92,6 +92,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             isTextarea={false}
             isEditing={startEdit}
             placeholder="Enter Project Title"
+            required
             ref={titleRef}
           />
           <Input
@@ -99,6 +100,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             isTextarea
             isEditing={startEdit}
             placeholder="Enter Project Description"
+            required
             ref={descRef}
           />
           <Input
@@ -107,6 +109,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             isEditing={false}
             isTextarea={false}
             id="dateInput"
+            required
             ref={dueDateRef}
           />
         </div>

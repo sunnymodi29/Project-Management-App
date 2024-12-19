@@ -15,14 +15,15 @@
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: transparent; 
+  background: transparent;
 }
- 
+
 /* Handle */
 ::-webkit-scrollbar-thumb {
   background: #1c1917b2;
   border-radius: 10px;
 }
+
 /* Scrollbar CSS */
 
 /* Tooltip CSS Starts */
@@ -120,4 +121,8 @@ textarea:hover {
 
 dialog {
   min-width: 400px;
+}
+
+.tasksAdded:hover .taskTitle {
+  width: 88%;
 }

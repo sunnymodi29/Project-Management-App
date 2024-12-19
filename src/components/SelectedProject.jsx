@@ -24,9 +24,9 @@ const SelectedProject = ({
         </Button>
       </div>
       <header className="pb-4 mb-4 border-b-2 border-x-stone-300">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-stone-600">{project.title}</h1>
-          <p className="text-stone-400">{formattedDate}</p>
+        <div className="flex justify-between mb-2">
+          <h1 className="text-3xl font-bold text-stone-600 break-all w-3/4">{project.title}</h1>
+          <p className="text-stone-400 mt-3">{formattedDate}</p>
         </div>
         <p className="text-stone-600 whitespace-pre-wrap">
           {project.description}

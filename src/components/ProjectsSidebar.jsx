@@ -11,6 +11,7 @@ function ProjectsSidebar({
   selectedProjectId,
   onEdit,
   onDelete,
+  onLogout,
 }) {
   const modal = useRef();
 
@@ -27,7 +28,34 @@ function ProjectsSidebar({
         <h2>Edit</h2>
       </Modal>
 
-      <aside className="w-1/3 px-8 py-16 bg-stone-900 text-stone-50 md:w-72 rounded-r-xl">
+      <aside className="w-1/3 px-8 pt-6 pb-16 bg-stone-900 text-stone-50 md:w-72 rounded-r-xl">
+        <div className="flex justify-end items-center mb-8">
+          <div
+            onClick={onLogout}
+            className="text-white transition-all cursor-pointer"
+            data-tooltip-id="logout_tooltip"
+            data-tooltip-content="Logout"
+            data-tooltip-place="bottom"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+              className="size-6 text-white hover:text-red-500"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9"
+              />
+            </svg>
+
+            <Tooltip id="logout_tooltip" />
+          </div>
+        </div>
+
         <h2 className="mb-8 font-bold uppercase md:text-xl text-stone-200">
           Your Projects
         </h2>
@@ -37,7 +65,7 @@ function ProjectsSidebar({
         <ul className="mt-4">
           {projects.map((project) => {
             let cssClasses =
-              "projectAdded w-full text-left px-2 py-2 rounded-sm hover:text-stone-200 hover:bg-stone-800 overflow-hidden flex justify-between align items-center cursor-pointer";
+              "projectAdded w-full text-left px-2 py-2 rounded-sm hover:text-stone-200 hover:bg-stone-800 overflow-hidden flex justify-between align items-center cursor-pointer hover:gap-1";
 
             if (project.id === selectedProjectId) {
               cssClasses += " bg-stone-800 text-stone-200";
@@ -49,7 +77,7 @@ function ProjectsSidebar({
               <li key={project.id} id={project.id} className="relative">
                 <div className={cssClasses}>
                   <span
-                    className="projectTitle w-4/5 truncate"
+                    className="projectTitle w-full hover:w-4/5 truncate"
                     onClick={() => onSelectProject(project.id)}
                   >
                     {project.title}

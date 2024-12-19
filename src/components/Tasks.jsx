@@ -81,12 +81,13 @@ const Tasks = ({
                   ref={taskTitleRef}
                   isEditing={undefined}
                   placeholder="Enter Task Name"
+                  required
                   value={editedTaskText}
                   onChange={handleChange}
                 />
               </Modal>
 
-              <span className="taskTitle w-10/12 truncate flex gap-3">
+              <span className="taskTitle w-full truncate flex gap-3">
                 <span className="truncate">{task.text}</span>
                 <span
                   className={`taskStatusValue ${taskStatusList.get(

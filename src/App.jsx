@@ -5,7 +5,6 @@ import ProjectsSidebar from "./components/ProjectsSidebar";
 import SelectedProject from "./components/SelectedProject";
 import { ToastContainer } from "react-toastify";
 import Toastify from "./components/Toastify";
-
 import {
   getFirestore,
   doc,
@@ -13,12 +12,24 @@ import {
   setDoc,
   getDoc,
 } from "firebase/firestore";
-import app from "./firebase/firebase-config";
+// import app from "./firebase/firebase-config";
 import { v4 as uuid } from "uuid";
+
+// Import Updated Starts
+
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import app, { auth } from "./firebase/firebase-config";
+import LoginScreen from "./components/LoginScreen";
+
+// Import Updated Ends
 
 const db = getFirestore(app);
 
-let intialObject = {
+let initialUserData = {
   selectedProjectId: "",
   projectsDetails: {
     projects: [],
@@ -27,70 +38,128 @@ let intialObject = {
 };
 
 function App() {
-  const [projectsState, setProjectsState] = useState(intialObject);
-
+  const [projectsState, setProjectsState] = useState(initialUserData);
   const [editedProject, setEditedProject] = useState();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data from Firestore on initial render/reload
+  // Updated Code for User Login and User Project Starts
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [logoutMode, setLogoutMode] = useState(false);
+
+  // Authenticate the user when the application loads
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const docRef = doc(db, "projectsData", "projectsDataDoc");
-        const docSnap = await getDoc(docRef);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setIsLoading(true);
+      setIsDataLoaded(false);
+      if (currentUser) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
 
-        if (docSnap.exists()) {
-          const fetchedData = docSnap.data();
-
-          const validatedState = {
-            selectedProjectId: fetchedData.selectedProjectId || "",
-            projectsDetails: {
-              projects: fetchedData.projectsDetails?.projects || [],
-              tasks: fetchedData.projectsDetails?.tasks || [],
-            },
-          };
-          setProjectsState(validatedState);
-        } else {
-          const docRef = doc(db, "projectsData", "projectsDataDoc");
-          await setDoc(docRef, projectsState);
-
-          setProjectsState(projectsState);
+        try {
+          await loadUserData(currentUser.uid);
+        } catch (error) {
+          console.error(
+            "Error loading user data on authentication state change:",
+            error
+          );
         }
-      } catch (error) {
-        console.error("Error fetching data from Firestore:", error);
-      } finally {
-        // setProjectsState((prevState) => {
-        //   return {
-        //     ...prevState,
-        //     selectedProjectId: "",
-        //   };
-        // });
-        setIsLoading(false);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setProjectsState(initialUserData);
       }
-    };
+      setIsLoading(false);
+    });
 
-    fetchData();
+    return () => unsubscribe();
   }, []);
 
-  // Update Firestore whenever projectsState changes
-  useEffect(() => {
-    const updateFirestore = async () => {
-      try {
-        const docRef = doc(db, "projectsData", "projectsDataDoc");
-        await updateDoc(docRef, projectsState);
+  // Load user-specific data from Firestore on authentication
+  const loadUserData = async (uid) => {
+    try {
+      const userDocRef = doc(db, "projectsData", uid);
+      const userDoc = await getDoc(userDocRef);
 
-        console.log(projectsState);
+      if (userDoc.exists()) {
+        const fetchedData = userDoc.data();
+
+        // Ensure no overwriting of valid projects/tasks during initialization
+        const validatedState = {
+          selectedProjectId:
+            fetchedData.selectedProjectId || initialUserData.selectedProjectId,
+          projectsDetails: {
+            projects: fetchedData.projectsDetails?.projects || [],
+            tasks: fetchedData.projectsDetails?.tasks || [],
+          },
+        };
+
+        setProjectsState(validatedState);
+      } else {
+        // Initialize new user data structure
+        await setDoc(userDocRef, initialUserData);
+        setProjectsState(initialUserData);
+      }
+
+      setIsDataLoaded(true);
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      Toastify({ toastType: "error", message: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Automatically save updated `projectsState` to Firestore
+  useEffect(() => {
+    const saveUserData = async () => {
+      if (!user || !isAuthenticated || !isDataLoaded || logoutMode) return;
+
+      try {
+        const userDocRef = doc(db, "projectsData", user.uid);
+
+        // Ensure you're not saving empty states!
+        const validState = {
+          selectedProjectId: projectsState.selectedProjectId || "",
+          projectsDetails: {
+            projects: projectsState.projectsDetails?.projects || [],
+            tasks: projectsState.projectsDetails?.tasks || [],
+          },
+        };
+
+        await updateDoc(userDocRef, validState);
       } catch (error) {
-        console.error("Error updating Firestore:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error saving user data:", error);
+        Toastify({ toastType: "error", message: error.message });
       }
     };
 
-    if (projectsState.projectsDetails.projects.length > 0) {
-      updateFirestore();
+    if (isAuthenticated && user) {
+      saveUserData();
     }
-  }, [projectsState]);
+  }, [projectsState, user, isAuthenticated, isDataLoaded, logoutMode]);
+
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      setLogoutMode(true);
+
+      await signOut(auth);
+
+      setProjectsState(initialUserData);
+      setIsAuthenticated(false);
+      setUser(null);
+      setLogoutMode(false);
+      setIsDataLoaded(true);
+      Toastify({ toastType: "success", message: "Logged out successfully!" });
+    } catch (error) {
+      Toastify({ toastType: "error", message: error.message });
+    }
+  };
+
+  // Updated Code for User Login and User Project Starts
 
   function handleAddTask(text) {
     if (!text) {
@@ -346,6 +415,11 @@ function App() {
   }
 
   function handleDeleteProject(selectedProjectId, projectTitle) {
+    if (!user || !isAuthenticated) {
+      console.error("Cannot delete project: User is not authenticated.");
+      return;
+    }
+
     Toastify({
       toastType: "success",
       message: `Project "${projectTitle}" Deleted Successfully!`,
@@ -373,10 +447,34 @@ function App() {
         // If no projects left, clear the Firestore document
         const clearFirestoreData = async () => {
           try {
-            const docRef = doc(db, "projectsData", "projectsDataDoc");
-            await setDoc(docRef, intialObject);
+            const userDocRef = doc(db, "projectsData", user.uid);
+
+            const remainingProjects =
+              projectsState.projectsDetails.projects.filter(
+                (project) => project.id !== selectedProjectId
+              );
+
+            if (remainingProjects.length === 0) {
+              await setDoc(userDocRef, initialUserData);
+            } else {
+              const updatedState = {
+                selectedProjectId: "",
+                projectsDetails: {
+                  projects: remainingProjects,
+                  tasks: projectsState.projectsDetails.tasks.filter(
+                    (task) => task.projectId !== selectedProjectId
+                  ),
+                },
+              };
+
+              await setDoc(userDocRef, updatedState);
+            }
           } catch (error) {
-            console.error(error);
+            console.error(
+              "Error while clearing/updating Firestore data:",
+              error
+            );
+            Toastify({ toastType: "error", message: error.message });
           }
         };
         clearFirestoreData();
@@ -431,35 +529,39 @@ function App() {
 
   return (
     <>
-      {isLoading && (
+      {isLoading ? (
         <div className="loader-overlay">
           <div className="loader-spinner"></div>
         </div>
+      ) : !isAuthenticated ? (
+        <LoginScreen />
+      ) : (
+        <main className="h-screen my-8 flex gap-8">
+          <ProjectsSidebar
+            onStartAddProject={handleStartAddProject}
+            projects={projectsState.projectsDetails.projects}
+            onSelectProject={handleSelectedProject}
+            selectedProjectId={projectsState.selectedProjectId}
+            onEdit={handleStartEditProject}
+            onDelete={handleDeleteProject}
+            onLogout={handleLogout}
+          />
+          {content}
+        </main>
       )}
 
-      <main className="h-screen my-8 flex gap-8">
-        <ProjectsSidebar
-          onStartAddProject={handleStartAddProject}
-          projects={projectsState.projectsDetails.projects}
-          onSelectProject={handleSelectedProject}
-          selectedProjectId={projectsState.selectedProjectId}
-          onEdit={handleStartEditProject}
-          onDelete={handleDeleteProject}
-        />
-        {content}
-        <ToastContainer
-          position="top-right"
-          autoClose={1500}
-          hideProgressBar
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </main>
+      <ToastContainer
+        position="top-right"
+        autoClose={1500}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </>
   );
 }
