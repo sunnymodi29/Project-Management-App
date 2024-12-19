@@ -12,20 +12,10 @@ import {
   setDoc,
   getDoc,
 } from "firebase/firestore";
-// import app from "./firebase/firebase-config";
 import { v4 as uuid } from "uuid";
-
-// Import Updated Starts
-
-import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import app, { auth } from "./firebase/firebase-config";
 import LoginScreen from "./components/LoginScreen";
-
-// Import Updated Ends
 
 const db = getFirestore(app);
 
@@ -41,8 +31,6 @@ function App() {
   const [projectsState, setProjectsState] = useState(initialUserData);
   const [editedProject, setEditedProject] = useState();
   const [isLoading, setIsLoading] = useState(true);
-
-  // Updated Code for User Login and User Project Starts
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -86,7 +74,6 @@ function App() {
       if (userDoc.exists()) {
         const fetchedData = userDoc.data();
 
-        // Ensure no overwriting of valid projects/tasks during initialization
         const validatedState = {
           selectedProjectId:
             fetchedData.selectedProjectId || initialUserData.selectedProjectId,
@@ -98,7 +85,6 @@ function App() {
 
         setProjectsState(validatedState);
       } else {
-        // Initialize new user data structure
         await setDoc(userDocRef, initialUserData);
         setProjectsState(initialUserData);
       }
@@ -158,8 +144,6 @@ function App() {
       Toastify({ toastType: "error", message: error.message });
     }
   };
-
-  // Updated Code for User Login and User Project Starts
 
   function handleAddTask(text) {
     if (!text) {
