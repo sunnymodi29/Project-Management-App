@@ -23,6 +23,18 @@ function ProjectsSidebar({
     onEdit(id, isEdit, editedProject);
   }
 
+  const userProfileVal =
+    userProfile.displayName.split(" ").length > 1
+      ? userProfile.displayName.split(" ")[0].charAt(0) +
+        userProfile.displayName.split(" ").slice(-1).toString().charAt(0)
+      : userProfile.displayName.split(" ")[0].charAt(0);
+
+  const userProfileTooltipVal = userProfile.displayName
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .toString()
+    .replaceAll(",", " ");
+
   return (
     <>
       <Modal ref={modal} buttonCaption="Save">
@@ -31,22 +43,27 @@ function ProjectsSidebar({
 
       <aside className="w-1/3 px-8 pt-6 pb-16 bg-stone-900 text-stone-50 md:w-72 rounded-r-xl">
         <div className="flex justify-between items-center mb-8">
-          <div>
+          <div
+            data-tooltip-id="userName_tooltip"
+            data-tooltip-content={userProfileTooltipVal}
+            data-tooltip-place="right"
+          >
             {userProfile.photoURL?.startsWith("https://") ? (
               <img
                 src={userProfile.photoURL}
                 alt="User Profile"
                 width={32}
                 height={32}
-                className="rounded-full"
+                className="rounded-full cursor-pointer"
               />
             ) : (
               <div className="max-w-8 max-h-8 bg-stone-400 p-4 flex justify-center items-center rounded-full select-none">
-                <span className="flex justify-center items-center text-xl font-bold text-stone-950">
-                  {userProfile.email.charAt(0).toUpperCase()}
+                <span className="flex justify-center items-center text-lg font-bold text-stone-950 uppercase">
+                  {userProfileVal}
                 </span>
               </div>
             )}
+            <Tooltip id="userName_tooltip" />
           </div>
           <div
             onClick={onLogout}

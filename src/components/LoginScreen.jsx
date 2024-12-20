@@ -4,14 +4,17 @@ import Button from "./Button";
 import googleImage from "../assets/googleLogo.png";
 
 function LoginScreen({ onLogin, onSignUp, onGoogleLogin }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const intialUserData = {
+    username: "",
+    email: "",
+    password: "",
+  };
+  const [userData, setUserData] = useState(intialUserData);
 
   function toggleMode() {
     setIsLoginMode((prevMode) => !prevMode);
-    setEmail("");
-    setPassword("");
+    setUserData(intialUserData);
   }
 
   return (
@@ -28,14 +31,39 @@ function LoginScreen({ onLogin, onSignUp, onGoogleLogin }) {
           {isLoginMode ? "Welcome Back!" : "Create An Account"}
         </h2>
         <form onSubmit={(e) => e.preventDefault()} className="space-y-4 mt-6">
+          {!isLoginMode && (
+            <Input
+              type="text"
+              labelName="User Name"
+              isTextarea={false}
+              placeholder="Enter Your Name"
+              required
+              value={userData.username}
+              onChange={(e) =>
+                setUserData((prevState) => {
+                  return {
+                    ...prevState,
+                    username: e.target.value,
+                  };
+                })
+              }
+            />
+          )}
           <Input
             type="email"
             labelName="Email"
             isTextarea={false}
             placeholder="Enter Your Email Address"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={userData.email}
+            onChange={(e) =>
+              setUserData((prevState) => {
+                return {
+                  ...prevState,
+                  email: e.target.value,
+                };
+              })
+            }
           />
           <Input
             type="password"
@@ -43,15 +71,24 @@ function LoginScreen({ onLogin, onSignUp, onGoogleLogin }) {
             isTextarea={false}
             placeholder="Enter Your Password"
             required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={userData.password}
+            onChange={(e) =>
+              setUserData((prevState) => {
+                return {
+                  ...prevState,
+                  password: e.target.value,
+                };
+              })
+            }
           />
 
           <Button
             additionalClasses="w-full uppercase tracking-wider font-semibold"
             type="save"
             onClick={() =>
-              isLoginMode ? onLogin(email, password) : onSignUp(email, password)
+              isLoginMode
+                ? onLogin(userData.email, userData.password)
+                : onSignUp(userData.username, userData.email, userData.password)
             }
           >
             {isLoginMode ? "Login" : "Sign Up"}

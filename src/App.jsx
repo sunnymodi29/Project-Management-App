@@ -20,6 +20,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   createUserWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
 import app, { auth } from "./firebase/firebase-config";
 import LoginScreen from "./components/LoginScreen";
@@ -81,7 +82,7 @@ function App() {
   }
 
   // Sign Up Handler
-  async function handleSignUp(email, password) {
+  async function handleSignUp(username, email, password) {
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -90,6 +91,8 @@ function App() {
         password
       );
       const user = userCredential.user;
+
+      await updateProfile(user, { displayName: username });
 
       Toastify({ toastType: "success", message: "Signed Up Successfully!" });
 
