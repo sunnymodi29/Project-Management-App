@@ -40,7 +40,7 @@ const Input = forwardRef(
             {...props}
           />
         ) : (
-          <input ref={ref} className={classes} id={id} {...props} />
+          <input ref={ref} className={classes} id={id} type={type} {...props} />
         )}
       </p>
     );

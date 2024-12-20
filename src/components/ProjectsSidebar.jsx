@@ -12,6 +12,7 @@ function ProjectsSidebar({
   onEdit,
   onDelete,
   onLogout,
+  userProfile,
 }) {
   const modal = useRef();
 
@@ -29,7 +30,24 @@ function ProjectsSidebar({
       </Modal>
 
       <aside className="w-1/3 px-8 pt-6 pb-16 bg-stone-900 text-stone-50 md:w-72 rounded-r-xl">
-        <div className="flex justify-end items-center mb-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            {userProfile.photoURL?.startsWith("https://") ? (
+              <img
+                src={userProfile.photoURL}
+                alt="User Profile"
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+            ) : (
+              <div className="max-w-8 max-h-8 bg-stone-400 p-4 flex justify-center items-center rounded-full select-none">
+                <span className="flex justify-center items-center text-xl font-bold text-stone-950">
+                  {userProfile.email.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
           <div
             onClick={onLogout}
             className="text-white transition-all cursor-pointer"

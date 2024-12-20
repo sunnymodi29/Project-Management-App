@@ -7,6 +7,11 @@
   --text-white: #fff;
 }
 
+::selection {
+  background-color: #44403c;
+  color: #fff;
+}
+
 /* Scrollbar CSS */
 /* width */
 ::-webkit-scrollbar {
@@ -125,4 +130,8 @@ dialog {
 
 .tasksAdded:hover .taskTitle {
   width: 88%;
+}
+
+img {
+  user-select: none;
 }

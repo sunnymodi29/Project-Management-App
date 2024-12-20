@@ -8,7 +8,6 @@ const DropDown = ({
   dropDownList,
 }) => {
   const dropdownRef = useRef();
-  console.log(dropdownRef);
 
   useEffect(() => {
     function handleClickOutside(event) {

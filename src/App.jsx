@@ -13,7 +13,14 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { v4 as uuid } from "uuid";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signOut,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
 import app, { auth } from "./firebase/firebase-config";
 import LoginScreen from "./components/LoginScreen";
 
@@ -29,13 +36,71 @@ let initialUserData = {
 
 function App() {
   const [projectsState, setProjectsState] = useState(initialUserData);
-  const [editedProject, setEditedProject] = useState();
   const [isLoading, setIsLoading] = useState(true);
-
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [user, setUser] = useState(null);
   const [logoutMode, setLogoutMode] = useState(false);
+  const [editedProject, setEditedProject] = useState();
+  const [userProfile, setUserProfile] = useState("");
+
+  /* User Login, SignUp, Logout And User Wise Data Logic Starts */
+
+  // Login Handler
+  async function handleLogin(email, password) {
+    if (email && password) {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        Toastify({
+          toastType: "success",
+          message: "Logged In Successfully!",
+        });
+      } catch (error) {
+        Toastify({ toastType: "error", message: "Invalid Credentials" });
+      }
+    } else {
+      Toastify({
+        toastType: "error",
+        message: "Please Provide Valid Details",
+      });
+    }
+  }
+
+  // Google Login Handler
+  async function handleGoogleLogin() {
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await Promise.race([signInWithPopup(auth, provider)]);
+      const user = result.user;
+
+      setUser(user);
+      setIsAuthenticated(true);
+      Toastify({ toastType: "success", message: "Logged in Successfully!" });
+    } catch (error) {}
+  }
+
+  // Sign Up Handler
+  async function handleSignUp(email, password) {
+    setIsLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      Toastify({ toastType: "success", message: "Signed Up Successfully!" });
+
+      setUser(user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      Toastify({ toastType: "error", message: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   // Authenticate the user when the application loads
   useEffect(() => {
@@ -43,6 +108,7 @@ function App() {
       setIsLoading(true);
       setIsDataLoaded(false);
       if (currentUser) {
+        setUserProfile(currentUser);
         setUser(currentUser);
         setIsAuthenticated(true);
 
@@ -66,7 +132,7 @@ function App() {
   }, []);
 
   // Load user-specific data from Firestore on authentication
-  const loadUserData = async (uid) => {
+  async function loadUserData(uid) {
     try {
       const userDocRef = doc(db, "projectsData", uid);
       const userDoc = await getDoc(userDocRef);
@@ -91,22 +157,20 @@ function App() {
 
       setIsDataLoaded(true);
     } catch (error) {
-      console.error("Error loading user data:", error);
       Toastify({ toastType: "error", message: error.message });
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   // Automatically save updated `projectsState` to Firestore
   useEffect(() => {
-    const saveUserData = async () => {
+    async function saveUserData() {
       if (!user || !isAuthenticated || !isDataLoaded || logoutMode) return;
 
       try {
         const userDocRef = doc(db, "projectsData", user.uid);
 
-        // Ensure you're not saving empty states!
         const validState = {
           selectedProjectId: projectsState.selectedProjectId || "",
           projectsDetails: {
@@ -117,10 +181,9 @@ function App() {
 
         await updateDoc(userDocRef, validState);
       } catch (error) {
-        console.error("Error saving user data:", error);
         Toastify({ toastType: "error", message: error.message });
       }
-    };
+    }
 
     if (isAuthenticated && user) {
       saveUserData();
@@ -128,7 +191,7 @@ function App() {
   }, [projectsState, user, isAuthenticated, isDataLoaded, logoutMode]);
 
   // Logout Handler
-  const handleLogout = async () => {
+  async function handleLogout() {
     try {
       setLogoutMode(true);
 
@@ -139,11 +202,213 @@ function App() {
       setUser(null);
       setLogoutMode(false);
       setIsDataLoaded(true);
-      Toastify({ toastType: "success", message: "Logged out successfully!" });
+      Toastify({ toastType: "success", message: "Logged Out Successfully!" });
     } catch (error) {
       Toastify({ toastType: "error", message: error.message });
     }
-  };
+  }
+
+  /* User Login, SignUp, Logout And User Wise Data Logic Ends */
+
+  /* Project Logic Starts */
+
+  function handleStartAddProject() {
+    setProjectsState((prevState) => {
+      return {
+        ...prevState,
+        selectedProjectId: null,
+      };
+    });
+    setEditedProject("");
+  }
+
+  function handleCancelAddProject(id) {
+    setProjectsState((prevState) => {
+      return {
+        ...prevState,
+        selectedProjectId: "",
+      };
+    });
+  }
+
+  function handleAddProject(projectData, isAdd) {
+    try {
+      if (!isAdd) {
+        setProjectsState((prevState) => {
+          const newProject = {
+            ...projectData,
+            id: uuid(),
+          };
+
+          return {
+            ...prevState,
+            selectedProjectId: "",
+            projectsDetails: {
+              projects: [...prevState.projectsDetails.projects, newProject],
+              tasks: [...prevState.projectsDetails.tasks],
+            },
+          };
+        });
+
+        Toastify({
+          toastType: "success",
+          message: "Project Addedd Successfully!",
+        });
+      } else {
+        setProjectsState((prevState) => {
+          return {
+            ...projectData,
+          };
+        });
+      }
+    } catch (error) {
+      Toastify({
+        toastType: "error",
+        message: error,
+      });
+    }
+  }
+
+  function handleStartEditProject(projectId) {
+    const projectToEdit = projectsState.projectsDetails.projects.find(
+      (project) => project.id === projectId
+    );
+
+    setEditedProject(projectToEdit); // Save this project in the state as the project being edited
+    setProjectsState((prevState) => ({
+      ...prevState,
+      selectedProjectId: null, // Switch to NewProject form
+    }));
+  }
+
+  function handleEditProject(projectData, projectId) {
+    Toastify({ toastType: "success", message: "Project Edited Successfully!" });
+
+    setProjectsState((prevState) => {
+      const updatedProjects = prevState.projectsDetails.projects.map(
+        (project) =>
+          project.id === projectId ? { ...project, ...projectData } : project
+      );
+
+      return {
+        ...prevState,
+        projectsDetails: {
+          ...prevState.projectsDetails,
+          projects: updatedProjects,
+        },
+        selectedProjectId: "",
+      };
+    });
+
+    const updatedProject = { ...projectData, id: projectId };
+    setEditedProject(updatedProject);
+  }
+
+  function handleDeleteProject(selectedProjectId, projectTitle) {
+    if (!user || !isAuthenticated) {
+      console.error("Cannot delete project: User is not authenticated.");
+      return;
+    }
+
+    Toastify({
+      toastType: "success",
+      message: `Project "${projectTitle}" Deleted Successfully!`,
+    });
+
+    setProjectsState((prevState) => {
+      const filteredProjects = prevState.projectsDetails.projects.filter(
+        (project) => project.id !== selectedProjectId
+      );
+
+      const filteredTasks = prevState.projectsDetails.tasks.filter(
+        (task) => task.projectId !== selectedProjectId
+      );
+
+      const updatedState = {
+        ...prevState,
+        selectedProjectId: "",
+        projectsDetails: {
+          projects: filteredProjects,
+          tasks: filteredTasks,
+        },
+      };
+
+      if (filteredProjects.length === 0) {
+        // If no projects left, clear the Firestore document
+        async function clearFirestoreData() {
+          try {
+            const userDocRef = doc(db, "projectsData", user.uid);
+
+            const remainingProjects =
+              projectsState.projectsDetails.projects.filter(
+                (project) => project.id !== selectedProjectId
+              );
+
+            if (remainingProjects.length === 0) {
+              await setDoc(userDocRef, initialUserData);
+            } else {
+              const updatedState = {
+                selectedProjectId: "",
+                projectsDetails: {
+                  projects: remainingProjects,
+                  tasks: projectsState.projectsDetails.tasks.filter(
+                    (task) => task.projectId !== selectedProjectId
+                  ),
+                },
+              };
+
+              await setDoc(userDocRef, updatedState);
+            }
+          } catch (error) {
+            Toastify({ toastType: "error", message: error.message });
+          }
+        }
+        clearFirestoreData();
+      }
+
+      return updatedState;
+    });
+  }
+
+  function handleSelectedProject(id) {
+    const isValidProject = projectsState.projectsDetails.projects.some(
+      (project) => project.id === id
+    );
+
+    if (isValidProject) {
+      setProjectsState((prevState) => ({
+        ...prevState,
+        selectedProjectId: id,
+      }));
+    } else {
+      Toastify({
+        toastType: "error",
+        message: "The selected project does not exist.",
+      });
+    }
+  }
+
+  function filterSelectedProject() {
+    if (!projectsState || !projectsState.projectsDetails.projects) return null;
+
+    const selectedProject = projectsState.projectsDetails.projects.find(
+      (project) => project.id === projectsState.selectedProjectId
+    );
+
+    return selectedProject || null;
+  }
+
+  const selectedProject = filterSelectedProject();
+
+  const selectedProjectTasks = selectedProject
+    ? projectsState.projectsDetails.tasks.filter(
+        (task) => task.projectId === selectedProject.id
+      )
+    : [];
+
+  /* Project Logic Ends */
+
+  /* Task Logic Starts */
 
   function handleAddTask(text) {
     if (!text) {
@@ -197,24 +462,6 @@ function App() {
     });
   }
 
-  function handleDeleteTask(id, text) {
-    Toastify({
-      toastType: "success",
-      message: `Task "${text}" Deleted Successfully`,
-    });
-    setProjectsState((prevState) => {
-      return {
-        ...prevState,
-        projectsDetails: {
-          projects: [...prevState.projectsDetails.projects],
-          tasks: prevState.projectsDetails.tasks.filter(
-            (task) => task.id !== id
-          ),
-        },
-      };
-    });
-  }
-
   function handleEditTask(taskId, editedTaskText) {
     if (!editedTaskText) {
       Toastify({
@@ -259,6 +506,24 @@ function App() {
     });
   }
 
+  function handleDeleteTask(id, text) {
+    Toastify({
+      toastType: "success",
+      message: `Task "${text}" Deleted Successfully`,
+    });
+    setProjectsState((prevState) => {
+      return {
+        ...prevState,
+        projectsDetails: {
+          projects: [...prevState.projectsDetails.projects],
+          tasks: prevState.projectsDetails.tasks.filter(
+            (task) => task.id !== id
+          ),
+        },
+      };
+    });
+  }
+
   function handleTaskStatus(taskId, taskStatus) {
     setProjectsState((prevState) => {
       const updatedTasks = prevState.projectsDetails.tasks.map((task) =>
@@ -275,9 +540,11 @@ function App() {
         },
       };
     });
-
-    console.log(taskId, taskStatus);
   }
+
+  /* Task Logic Ends */
+
+  /* Back Logic Starts */
 
   function handleBack() {
     setProjectsState((prevState) => {
@@ -288,203 +555,9 @@ function App() {
     });
   }
 
-  function handleSelectedProject(id) {
-    const isValidProject = projectsState.projectsDetails.projects.some(
-      (project) => project.id === id
-    );
+  /* Back Logic Ends */
 
-    if (isValidProject) {
-      setProjectsState((prevState) => ({
-        ...prevState,
-        selectedProjectId: id,
-      }));
-    } else {
-      Toastify({
-        toastType: "error",
-        message: "The selected project does not exist.",
-      });
-    }
-  }
-
-  function handleStartAddProject() {
-    setProjectsState((prevState) => {
-      return {
-        ...prevState,
-        selectedProjectId: null,
-      };
-    });
-    setEditedProject("");
-  }
-
-  function handleAddProject(projectData, isAdd) {
-    try {
-      if (!isAdd) {
-        setProjectsState((prevState) => {
-          const newProject = {
-            ...projectData,
-            id: uuid(),
-          };
-
-          return {
-            ...prevState,
-            selectedProjectId: "",
-            projectsDetails: {
-              projects: [...prevState.projectsDetails.projects, newProject],
-              tasks: [...prevState.projectsDetails.tasks],
-            },
-          };
-        });
-
-        Toastify({
-          toastType: "success",
-          message: "Project Addedd Successfully!",
-        });
-      } else {
-        setProjectsState((prevState) => {
-          return {
-            ...projectData,
-          };
-        });
-      }
-    } catch (error) {
-      Toastify({
-        toastType: "error",
-        message: error,
-      });
-    }
-  }
-
-  function handleCancelAddProject(id) {
-    setProjectsState((prevState) => {
-      return {
-        ...prevState,
-        selectedProjectId: "",
-      };
-    });
-  }
-
-  function handleEditProject(projectData, projectId) {
-    Toastify({ toastType: "success", message: "Project Edited Successfully!" });
-
-    setProjectsState((prevState) => {
-      const updatedProjects = prevState.projectsDetails.projects.map(
-        (project) =>
-          project.id === projectId ? { ...project, ...projectData } : project
-      );
-
-      return {
-        ...prevState,
-        projectsDetails: {
-          ...prevState.projectsDetails,
-          projects: updatedProjects,
-        },
-        selectedProjectId: "",
-      };
-    });
-
-    const updatedProject = { ...projectData, id: projectId };
-    setEditedProject(updatedProject);
-  }
-
-  function handleStartEditProject(projectId) {
-    const projectToEdit = projectsState.projectsDetails.projects.find(
-      (project) => project.id === projectId
-    );
-
-    setEditedProject(projectToEdit); // Save this project in the state as the project being edited
-    setProjectsState((prevState) => ({
-      ...prevState,
-      selectedProjectId: null, // Switch to NewProject form
-    }));
-  }
-
-  function handleDeleteProject(selectedProjectId, projectTitle) {
-    if (!user || !isAuthenticated) {
-      console.error("Cannot delete project: User is not authenticated.");
-      return;
-    }
-
-    Toastify({
-      toastType: "success",
-      message: `Project "${projectTitle}" Deleted Successfully!`,
-    });
-
-    setProjectsState((prevState) => {
-      const filteredProjects = prevState.projectsDetails.projects.filter(
-        (project) => project.id !== selectedProjectId
-      );
-
-      const filteredTasks = prevState.projectsDetails.tasks.filter(
-        (task) => task.projectId !== selectedProjectId
-      );
-
-      const updatedState = {
-        ...prevState,
-        selectedProjectId: "",
-        projectsDetails: {
-          projects: filteredProjects,
-          tasks: filteredTasks,
-        },
-      };
-
-      if (filteredProjects.length === 0) {
-        // If no projects left, clear the Firestore document
-        const clearFirestoreData = async () => {
-          try {
-            const userDocRef = doc(db, "projectsData", user.uid);
-
-            const remainingProjects =
-              projectsState.projectsDetails.projects.filter(
-                (project) => project.id !== selectedProjectId
-              );
-
-            if (remainingProjects.length === 0) {
-              await setDoc(userDocRef, initialUserData);
-            } else {
-              const updatedState = {
-                selectedProjectId: "",
-                projectsDetails: {
-                  projects: remainingProjects,
-                  tasks: projectsState.projectsDetails.tasks.filter(
-                    (task) => task.projectId !== selectedProjectId
-                  ),
-                },
-              };
-
-              await setDoc(userDocRef, updatedState);
-            }
-          } catch (error) {
-            console.error(
-              "Error while clearing/updating Firestore data:",
-              error
-            );
-            Toastify({ toastType: "error", message: error.message });
-          }
-        };
-        clearFirestoreData();
-      }
-
-      return updatedState;
-    });
-  }
-
-  function filterSelectedProject() {
-    if (!projectsState || !projectsState.projectsDetails.projects) return null;
-
-    const selectedProject = projectsState.projectsDetails.projects.find(
-      (project) => project.id === projectsState.selectedProjectId
-    );
-
-    return selectedProject || null;
-  }
-
-  const selectedProject = filterSelectedProject();
-
-  const selectedProjectTasks = selectedProject
-    ? projectsState.projectsDetails.tasks.filter(
-        (task) => task.projectId === selectedProject.id
-      )
-    : [];
+  /* App Content Showing Logic Starts */
 
   let content = (
     <SelectedProject
@@ -518,7 +591,11 @@ function App() {
           <div className="loader-spinner"></div>
         </div>
       ) : !isAuthenticated ? (
-        <LoginScreen />
+        <LoginScreen
+          onLogin={handleLogin}
+          onSignUp={handleSignUp}
+          onGoogleLogin={handleGoogleLogin}
+        />
       ) : (
         <main className="h-screen my-8 flex gap-8">
           <ProjectsSidebar
@@ -529,6 +606,7 @@ function App() {
             onEdit={handleStartEditProject}
             onDelete={handleDeleteProject}
             onLogout={handleLogout}
+            userProfile={userProfile}
           />
           {content}
         </main>
@@ -548,6 +626,8 @@ function App() {
       />
     </>
   );
+
+  /* App Content Showing Logic Starts */
 }
 
 export default App;
