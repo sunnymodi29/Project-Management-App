@@ -175,8 +175,8 @@ aside {
   }
 
   .backdrop {
-    background-color: #000;
-    opacity: 0.5;
+    background-color: rgb(28 25 23 / 0.9);
+    /* opacity: 0.5; */
   }
 
   .taskStatusValue {
@@ -196,6 +196,11 @@ aside {
 
   .newTaskSection div,
   .newTaskSection button {
+    width: 100%;
+  }
+
+  dialog {
+    min-width: auto;
     width: 100%;
   }
 }

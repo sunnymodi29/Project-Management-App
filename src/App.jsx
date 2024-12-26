@@ -264,7 +264,7 @@ function App() {
 
         Toastify({
           toastType: "success",
-          message: "Project Addedd Successfully!",
+          message: "Project Added Successfully!",
         });
       } else {
         setProjectsState((prevState) => {
@@ -452,7 +452,7 @@ function App() {
       );
 
       const isDuplicate = selectedProjectTasks.find(
-        (task) => task.text === text
+        (task) => task.text.toLowerCase() === text.toLowerCase()
       );
 
       if (!isDuplicate) {

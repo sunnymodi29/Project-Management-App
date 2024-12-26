@@ -340,7 +340,7 @@ function ProjectsSidebar({
                     >
                       {project.title}
                     </span>
-                    <div className="projectOptions mt-px gap-2 hidden flex">
+                    <div className="projectOptions mt-px gap-2 md:hidden flex">
                       <span
                         className="editOption cursor-pointer"
                         data-tooltip-id="dark_tooltip"
