@@ -14,7 +14,7 @@ const NewTask = ({ onAdd }) => {
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 w-full">
+    <div className="newTaskSection flex items-center justify-between gap-3 lg:w-96">
       <div className="flex gap-3 items-center justify-between w-9/12">
         <input
           type="text"

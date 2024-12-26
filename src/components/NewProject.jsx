@@ -72,19 +72,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
           Please make sure you fill out all input fields.
         </p>
       </Modal>
-      <div className="w-[35rem] mt-16">
-        <menu className="flex items-center justify-end gap-4 my-4">
-          <li>
-            <Button onClick={onCancel} type="cancel">
-              Cancel
-            </Button>
-          </li>
-          <li>
-            <Button onClick={handleSaveProject} type="save">
-              Save
-            </Button>
-          </li>
-        </menu>
+      <div className="2xl:w-[35rem] 2xl:p-0 lg:w-[35rem] lg:p-0 md:mt-6 flex flex-col w-full px-6 mt-4">
         <div>
           <Input
             type="text"
@@ -113,6 +101,18 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             ref={dueDateRef}
           />
         </div>
+        <menu className="flex items-center justify-end gap-4 my-4">
+          <li>
+            <Button onClick={onCancel} type="cancel">
+              Cancel
+            </Button>
+          </li>
+          <li>
+            <Button onClick={handleSaveProject} type="save">
+              Save
+            </Button>
+          </li>
+        </menu>
       </div>
     </>
   );

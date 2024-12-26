@@ -3,7 +3,7 @@ const Button = ({ children, type, additionalClasses, ...props }) => {
   if (type === "normal" || type === "save") {
     button = (
       <button
-        className={`px-4 py-2 text-xs md:text-base rounded-md bg-stone-700 hover:bg-stone-900 text-white transition-all ${additionalClasses}`}
+        className={`px-4 py-2  md:text-base rounded-md bg-stone-700 hover:bg-stone-900 text-white transition-all ${additionalClasses}`}
         {...props}
       >
         {children}
@@ -21,7 +21,7 @@ const Button = ({ children, type, additionalClasses, ...props }) => {
   } else {
     button = (
       <button
-        className={`px-4 py-2 text-xs md:text-base rounded-md bg-stone-700 text-stone-400 hover:bg-stone-600 hover:text-stone-100 transition-all  ${additionalClasses}`}
+        className={`px-4 py-2  md:text-base rounded-md bg-stone-700 text-stone-100 hover:bg-stone-900 hover:text-stone-100 transition-all ${additionalClasses}`}
         {...props}
       >
         {children}

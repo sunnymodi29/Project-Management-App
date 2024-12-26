@@ -24,6 +24,7 @@ import {
 } from "firebase/auth";
 import app, { auth } from "./firebase/firebase-config";
 import LoginScreen from "./components/LoginScreen";
+import { Tooltip } from "react-tooltip";
 
 const db = getFirestore(app);
 
@@ -50,6 +51,7 @@ function App() {
   // Login Handler
   async function handleLogin(email, password) {
     if (email && password) {
+      setIsLoading(true);
       try {
         await signInWithEmailAndPassword(auth, email, password);
         Toastify({
@@ -65,6 +67,7 @@ function App() {
         message: "Please Provide Valid Details",
       });
     }
+    setIsLoading(false);
   }
 
   // Google Login Handler
@@ -83,26 +86,32 @@ function App() {
 
   // Sign Up Handler
   async function handleSignUp(username, email, password) {
-    setIsLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
+    if (username && email && password) {
+      setIsLoading(true);
+      try {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
 
-      await updateProfile(user, { displayName: username });
+        await updateProfile(user, { displayName: username });
 
-      Toastify({ toastType: "success", message: "Signed Up Successfully!" });
+        Toastify({ toastType: "success", message: "Signed Up Successfully!" });
 
-      setUser(user);
-      setIsAuthenticated(true);
-    } catch (error) {
-      Toastify({ toastType: "error", message: error.message });
-    } finally {
-      setIsLoading(false);
+        setUser(user);
+        setIsAuthenticated(true);
+      } catch (error) {
+        Toastify({ toastType: "error", message: "Invalid Credentials!" });
+      }
+    } else {
+      Toastify({
+        toastType: "error",
+        message: "Please Provide Valid Details",
+      });
     }
+    setIsLoading(false);
   }
 
   // Authenticate the user when the application loads
@@ -600,7 +609,7 @@ function App() {
           onGoogleLogin={handleGoogleLogin}
         />
       ) : (
-        <main className="h-screen my-8 flex gap-8">
+        <main className="flex w-full h-full gap-0 md:gap-8 md:flex-row flex-col">
           <ProjectsSidebar
             onStartAddProject={handleStartAddProject}
             projects={projectsState.projectsDetails.projects}
@@ -614,6 +623,8 @@ function App() {
           {content}
         </main>
       )}
+
+      <Tooltip id="dark_tooltip"></Tooltip>
 
       <ToastContainer
         position="top-right"

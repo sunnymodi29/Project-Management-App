@@ -35,7 +35,7 @@ const DropDown = ({
       className={`absolute z-10 ${isOpenDropDown ? "block" : "hidden"}`}
       ref={dropdownRef}
     >
-      <ul className="dropdownContainer absolute mt-2 py-2 w-48 bg-white border border-gray-300 rounded-md shadow-lg z-50 top-0 -left-2">
+      <ul className="dropdownContainer absolute mt-2 py-2 md:w-48 w-40 bg-white border-gray-300 rounded-md shadow-lg z-50 top-0 md:-left-2 -left-36">
         {Array.from(dropDownList.keys()).map((list) => {
           const taskStatusName = `${dropDownList.get(list)}`;
           const taskActiveClasses = `${taskStatusName} hover:${taskStatusName}  font-bold text-stone-100 border-l-2 border-s-stone-900`;

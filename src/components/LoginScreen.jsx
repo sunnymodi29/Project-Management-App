@@ -19,7 +19,7 @@ function LoginScreen({ onLogin, onSignUp, onGoogleLogin }) {
 
   return (
     <div className="flex justify-center items-center h-screen bg-stone-700">
-      <div className="w-full max-w-sm bg-white p-6 rounded-md shadow-2xl">
+      <div className="w-full max-w-sm bg-white p-6 rounded-md shadow-2xl m-4">
         <div className="block mb-6 w-full text-md text-blue-500  text-right">
           <span className="hover:underline cursor-pointer" onClick={toggleMode}>
             {isLoginMode
@@ -101,7 +101,7 @@ function LoginScreen({ onLogin, onSignUp, onGoogleLogin }) {
           </div>
 
           <Button
-            additionalClasses="w-full flex items-center justify-center gap-2 hover:bg-stone-900 hover:border-stone-900 font-semibold"
+            additionalClasses="w-full flex items-center justify-center gap-2 hover:bg-stone-900 hover:border-stone-900 font-semibold whitespace-nowrap"
             type="cancel"
             onClick={onGoogleLogin}
           >
