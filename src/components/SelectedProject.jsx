@@ -17,7 +17,7 @@ const SelectedProject = ({
   });
 
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full md:overflow-auto">
       <div className="2xl:w-full 2xl:p-0 lg:w-full lg:p-0 md:w-full md:p-0 md:mt-6 flex flex-col w-full px-6 mt-8">
         <div className="mb-8 md:ml-4">
           <Button onClick={onBack} type="cancel">
@@ -26,15 +26,19 @@ const SelectedProject = ({
         </div>
         <div className="card p-8 rounded-2xl mb-4 md:ml-4 md:mr-12">
           <header className="pb-4 mb-4 border-b-2 border-x-stone-300">
-            <div className="md:flex justify-between mb-2">
-              <h1 className="text-3xl font-bold text-stone-600 break-all md:w-3/4">
-                {project.title}
-              </h1>
-              <p className="text-stone-400 mt-3">{formattedDate}</p>
+            <div className="md:flex justify-between">
+              <div className="md:w-3/4 break-all">
+                <h1 className="text-3xl font-bold text-stone-600 mb-2">
+                  {project.title}
+                </h1>
+                <p className="text-stone-600 whitespace-pre-wrap">
+                  {project.description}
+                </p>
+              </div>
+              <p className="text-gray-600 pt-2 whitespace-nowrap">
+                {formattedDate}
+              </p>
             </div>
-            <p className="text-stone-600 whitespace-pre-wrap">
-              {project.description}
-            </p>
           </header>
           <Tasks
             onTaskAdd={onAddTask}

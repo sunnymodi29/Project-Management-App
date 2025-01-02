@@ -4,6 +4,8 @@ import Modal from "./Modal";
 import { useRef, useState } from "react";
 import Input from "./Input";
 import DropDown from "./DropDown";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const Tasks = ({
   onTaskAdd,
@@ -14,6 +16,7 @@ const Tasks = ({
 }) => {
   const modal = useRef();
   const taskTitleRef = useRef();
+  const taskDescRef = useRef();
   const [editedTaskText, setEditedTaskText] = useState("");
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
@@ -23,6 +26,15 @@ const Tasks = ({
   taskStatusList.set("In Progress", "bg-blue-700");
   taskStatusList.set("Completed", "bg-green-700");
   taskStatusList.set("On Hold", "bg-red-700");
+
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, false] }],
+      ["bold", "italic", "underline"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link", "image"],
+    ],
+  };
 
   function handleChange(event) {
     setEditedTaskText(event.target.value);
@@ -64,7 +76,7 @@ const Tasks = ({
           {tasks.map((task) => (
             <li
               key={task.id}
-              className="tasksAdded flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center relative"
+              className="tasksAdded flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center relative transition-all"
             >
               <Modal
                 ref={modal}
@@ -77,7 +89,7 @@ const Tasks = ({
                 </h2>
                 <Input
                   type="text"
-                  labelName="Edit Task Name"
+                  labelName="Task Name"
                   ref={taskTitleRef}
                   isEditing={undefined}
                   placeholder="Enter Task Name"
@@ -85,10 +97,41 @@ const Tasks = ({
                   value={editedTaskText}
                   onChange={handleChange}
                 />
+                {/* <Input
+                  type="text"
+                  labelName="Task Description"
+                  ref={taskDescRef}
+                  isEditing={undefined}
+                  placeholder="Enter Task Description"
+                  required
+                  isTextarea
+                  value={editedTaskText}
+                  onChange={handleChange}
+                /> */}
+                {/* <label class="text-sm font-bold uppercase text-stone-500">
+                  <span>Task Description</span>
+                  <span class="text-red-500">*</span>
+                </label>
+                <ReactQuill
+                  theme="snow"
+                  modules={modules}
+                  value={editedTaskText}
+                  className="mt-1 rounded-md border-stone-400 border-2"
+                  ref={taskDescRef}
+                  isEditing={undefined}
+                  // onChange={handleChange}
+                /> */}
               </Modal>
 
               <span className="taskTitle w-full truncate flex md:gap-3 gap-2">
-                <span className="truncate md:m-0 mr-0">{task.text}</span>
+                <span
+                  className="truncate md:m-0 mr-0"
+                  data-tooltip-id="tooltip_dynamic"
+                  data-tooltip-content={task.text}
+                  data-tooltip-place="top"
+                >
+                  {task.text}
+                </span>
                 <span
                   className={`taskStatusValue ${taskStatusList.get(
                     task.taskStatus
@@ -136,7 +179,7 @@ const Tasks = ({
                 </span>
               </span>
 
-              <div className="taskOptions mt-px gap-2 md:hidden flex">
+              <div className="taskOptions mt-px gap-2 md:invisible flex md:absolute md:right-2">
                 {/* <span
                   className="taskStatusOption cursor-pointer md:hidden"
                   data-tooltip-id="taskStatus_tooltip"

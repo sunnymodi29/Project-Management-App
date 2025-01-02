@@ -81,6 +81,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             isEditing={startEdit}
             placeholder="Enter Project Title"
             required
+            maxlength={70}
             ref={titleRef}
           />
           <Input
@@ -97,7 +98,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             isEditing={false}
             isTextarea={false}
             id="dateInput"
-            required
+            // required
             ref={dueDateRef}
           />
         </div>

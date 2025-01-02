@@ -26,6 +26,9 @@ import app, { auth } from "./firebase/firebase-config";
 import LoginScreen from "./components/LoginScreen";
 import { Tooltip } from "react-tooltip";
 
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 const db = getFirestore(app);
 
 let initialUserData = {
@@ -246,26 +249,39 @@ function App() {
   function handleAddProject(projectData, isAdd) {
     try {
       if (!isAdd) {
-        setProjectsState((prevState) => {
-          const newProject = {
-            ...projectData,
-            id: uuid(),
-          };
+        const newProject = {
+          ...projectData,
+          id: uuid(),
+        };
 
-          return {
-            ...prevState,
-            selectedProjectId: "",
-            projectsDetails: {
-              projects: [...prevState.projectsDetails.projects, newProject],
-              tasks: [...prevState.projectsDetails.tasks],
-            },
-          };
-        });
+        const isDuplicateProject =
+          projectsState.projectsDetails.projects.filter(
+            (project) => project.title === projectData.title
+          );
 
-        Toastify({
-          toastType: "success",
-          message: "Project Added Successfully!",
-        });
+        if (isDuplicateProject && isDuplicateProject.length !== 0) {
+          Toastify({
+            toastType: "error",
+            message: "Duplicate Project",
+          });
+          return;
+        } else {
+          setProjectsState((prevState) => {
+            return {
+              ...prevState,
+              selectedProjectId: "",
+              projectsDetails: {
+                projects: [...prevState.projectsDetails.projects, newProject],
+                tasks: [...prevState.projectsDetails.tasks],
+              },
+            };
+          });
+
+          Toastify({
+            toastType: "success",
+            message: "Project Added Successfully!",
+          });
+        }
       } else {
         setProjectsState((prevState) => {
           return {
@@ -624,7 +640,29 @@ function App() {
         </main>
       )}
 
+      {/* Dynamic Tooltip When Text Is Truncated */}
+
+      <Tooltip
+        id="tooltip_dynamic"
+        render={({ content, activeAnchor }) => {
+          if (activeAnchor) {
+            const { scrollWidth, offsetWidth } = activeAnchor;
+            if (scrollWidth !== offsetWidth) {
+              return content;
+            }
+          }
+          return null;
+        }}
+        style={{ maxWidth: "150px", wordBreak: "break-all" }}
+      ></Tooltip>
+
+      {/* Dynamic Tooltip When Text Is Truncated */}
+
+      {/* Default Tooltip */}
+
       <Tooltip id="dark_tooltip"></Tooltip>
+
+      {/* Default Tooltip */}
 
       <ToastContainer
         position="top-right"

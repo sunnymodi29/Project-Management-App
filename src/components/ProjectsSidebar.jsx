@@ -337,10 +337,13 @@ function ProjectsSidebar({
                     <span
                       className="projectTitle w-full hover:w-4/5 truncate"
                       onClick={() => onSelectProject(project.id)}
+                      data-tooltip-id="tooltip_dynamic"
+                      data-tooltip-content={project.title}
+                      data-tooltip-place="bottom"
                     >
                       {project.title}
                     </span>
-                    <div className="projectOptions mt-px gap-2 md:hidden flex">
+                    <div className="projectOptions mt-px gap-2 md:invisible flex md:absolute md:right-2">
                       <span
                         className="editOption cursor-pointer"
                         data-tooltip-id="dark_tooltip"
