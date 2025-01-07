@@ -379,3 +379,11 @@ aside {
 .fr-quick-insert{
   display: none;
 }
+
+.fr-wrapper div {
+  display: none !important;
+}
+
+.fr-wrapper div.fr-element{
+  display: block !important;
+}
