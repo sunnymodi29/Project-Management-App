@@ -490,18 +490,19 @@ function App() {
     });
   }
 
-  function handleEditTask(taskId, editedTaskText) {
-    if (!editedTaskText) {
+  function handleEditTask(taskId, editedTaskObj) {
+    const { taskTitle, taskDescription } = editedTaskObj;
+    if (!taskTitle) {
       Toastify({
         toastType: "error",
-        message: "Task Edit Cannot Be Empty!",
+        message: "Task Title Cannot Be Empty!",
       });
       return;
     }
     setProjectsState((prevState) => {
       const isDuplicateTask = prevState.projectsDetails.tasks.find(
         (task) =>
-          task.text === editedTaskText &&
+          task.text === taskTitle &&
           task.id !== taskId &&
           task.projectId === prevState.selectedProjectId
       );
@@ -509,7 +510,7 @@ function App() {
       if (!isDuplicateTask) {
         const updatedTasks = prevState.projectsDetails.tasks.map((task) =>
           task.id === taskId && task.projectId === prevState.selectedProjectId
-            ? { ...task, text: editedTaskText }
+            ? { ...task, text: taskTitle, description: taskDescription }
             : task
         );
 
@@ -527,7 +528,7 @@ function App() {
       } else {
         Toastify({
           toastType: "error",
-          message: "Duplicate Task Not Permitted!",
+          message: "Duplicate Task Title Not Permitted!",
         });
         return prevState;
       }
@@ -616,7 +617,7 @@ function App() {
     <>
       {isLoading ? (
         <div className="loader-overlay">
-          <div className="loader-spinner"></div>
+          <div className="loader-spinner w-12 h-12"></div>
         </div>
       ) : !isAuthenticated ? (
         <LoginScreen

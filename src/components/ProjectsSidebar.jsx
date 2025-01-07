@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import Button from "./Button";
 import Modal from "./Modal";
 import { Tooltip } from "react-tooltip";
+import getFirstCharcters from "../utils/utils";
 // import Options from "./Options";
 
 function ProjectsSidebar({
@@ -25,11 +26,7 @@ function ProjectsSidebar({
     onEdit(id, isEdit, editedProject);
   }
 
-  const userProfileVal =
-    userProfile.displayName.split(" ").length > 1
-      ? userProfile.displayName.split(" ")[0].charAt(0) +
-        userProfile.displayName.split(" ").slice(-1).toString().charAt(0)
-      : userProfile.displayName.split(" ")[0].charAt(0);
+  const userProfileVal = getFirstCharcters(userProfile.displayName);
 
   const userProfileTooltipVal = userProfile.displayName
     .split(" ")
@@ -97,9 +94,7 @@ function ProjectsSidebar({
         className="backdrop hidden fixed inset-0 bg-opacity-50 z-50 md:!hidden"
         onClick={toggleSidebar}
       ></div>
-      <Modal ref={modal} buttonCaption="Save">
-        <h2>Edit</h2>
-      </Modal>
+      <Modal ref={modal} headingText="Edit" buttonCaption="Save"></Modal>
 
       <nav className="md:hidden p-3 sticky top-0 bg-stone-50 z-30">
         <div className="flex justify-between items-center">
@@ -318,7 +313,7 @@ function ProjectsSidebar({
             Your Projects
           </h2>
           <div>
-            <Button onClick={onStartAddProject}>+ Add Project</Button>
+            <Button type="save" onClick={onStartAddProject}>+ Add Project</Button>
           </div>
           <ul className="mt-5 overflow-auto">
             {projects.map((project) => {

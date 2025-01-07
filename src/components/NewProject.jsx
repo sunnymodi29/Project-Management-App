@@ -66,8 +66,8 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
 
   return (
     <>
-      <Modal ref={modal} buttonCaption="Okay">
-        <h2 className="text-xl font-bold text-stone-700 my-4">Invalid Input</h2>
+      <Modal ref={modal} headingText="Invalid Input" buttonCaption="Okay">
+        {/* <h2 className="text-xl font-bold text-stone-700 my-4">Invalid Input</h2> */}
         <p className="text-stone-600 mb-4">
           Please make sure you fill out all input fields.
         </p>

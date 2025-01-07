@@ -1,11 +1,15 @@
-import { Tooltip } from "react-tooltip";
 import NewTask from "./NewTask";
 import Modal from "./Modal";
 import { useRef, useState } from "react";
 import Input from "./Input";
 import DropDown from "./DropDown";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import Button from "./Button";
+import getFirstCharcters from "../utils/utils";
+
+import FroalaEditorComponent from "react-froala-wysiwyg";
+import "froala-editor/js/plugins.pkgd.min.js";
+import "froala-editor/css/froala_style.min.css";
+import "froala-editor/css/froala_editor.pkgd.min.css";
 
 const Tasks = ({
   onTaskAdd,
@@ -17,9 +21,14 @@ const Tasks = ({
   const modal = useRef();
   const taskTitleRef = useRef();
   const taskDescRef = useRef();
-  const [editedTaskText, setEditedTaskText] = useState("");
+  const [editedTask, setEditedTask] = useState({
+    taskTitle: "",
+    taskDescription: "",
+  });
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [isEditorActive, setIsEditorActive] = useState(true);
+  const [isModalLoader, setIsModalLoader] = useState(false);
 
   const taskStatusList = new Map();
   taskStatusList.set("Not Selected", "bg-stone-700");
@@ -27,39 +36,39 @@ const Tasks = ({
   taskStatusList.set("Completed", "bg-green-700");
   taskStatusList.set("On Hold", "bg-red-700");
 
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
-      ["bold", "italic", "underline"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["link", "image"],
-    ],
-  };
-
-  function handleChange(event) {
-    setEditedTaskText(event.target.value);
-  }
-
-  function handleTaskEdit(taskId) {
+  function handleTaskEdit(taskId, taskDesc) {
     const taskToEdit = tasks.find((task) => task.id === taskId);
     if (taskToEdit) {
-      setEditedTaskText(taskToEdit.text);
+      taskDesc && setIsEditorActive(false);
+      setEditedTask({
+        taskTitle: taskToEdit.text || "",
+        taskDescription: taskToEdit.description || "<p></p>",
+      });
       setEditingTaskId(taskId);
       modal.current.open();
+      document.activeElement.blur();
     }
   }
 
   function handleSaveEditedTask() {
-    onEditTask(editingTaskId, editedTaskText);
+    onEditTask(editingTaskId, editedTask);
     modal.current.close();
     setEditingTaskId(null);
-    setEditedTaskText("");
+    setEditedTask({
+      taskTitle: "",
+      taskDescription: "",
+    });
   }
 
   function toggleDropdown(taskId) {
     activeDropdownId === taskId && activeDropdownId
       ? setActiveDropdownId(null)
       : setActiveDropdownId(taskId);
+  }
+
+  function handleEditorActive() {
+    !isEditorActive ? setIsModalLoader(true) : setIsModalLoader(false);
+    setIsEditorActive(!isEditorActive);
   }
 
   return (
@@ -79,14 +88,12 @@ const Tasks = ({
               className="tasksAdded flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center relative transition-all"
             >
               <Modal
+                headingText="Edit Task"
                 ref={modal}
                 buttonCaption="Save"
                 isCancel={true}
                 onClick={handleSaveEditedTask}
               >
-                <h2 className="text-xl font-bold text-stone-700 mb-4 pb-1 border-b-2 border-stone-300">
-                  Edit Task
-                </h2>
                 <Input
                   type="text"
                   labelName="Task Name"
@@ -94,35 +101,176 @@ const Tasks = ({
                   isEditing={undefined}
                   placeholder="Enter Task Name"
                   required
-                  value={editedTaskText}
-                  onChange={handleChange}
+                  value={editedTask.taskTitle}
+                  onChange={(e) => {
+                    setEditedTask((prevState) => {
+                      return {
+                        ...prevState,
+                        taskTitle: e.target.value,
+                      };
+                    });
+                  }}
                 />
-                {/* <Input
-                  type="text"
-                  labelName="Task Description"
-                  ref={taskDescRef}
-                  isEditing={undefined}
-                  placeholder="Enter Task Description"
-                  required
-                  isTextarea
-                  value={editedTaskText}
-                  onChange={handleChange}
-                /> */}
-                {/* <label class="text-sm font-bold uppercase text-stone-500">
-                  <span>Task Description</span>
-                  <span class="text-red-500">*</span>
-                </label>
-                <ReactQuill
-                  theme="snow"
-                  modules={modules}
-                  value={editedTaskText}
-                  className="mt-1 rounded-md border-stone-400 border-2"
-                  ref={taskDescRef}
-                  isEditing={undefined}
-                  // onChange={handleChange}
-                /> */}
+
+                <p className="descriptionWrapper flex flex-col gap-2 my-4 relative">
+                  <label className="flex justify-between items-center text-sm font-bold uppercase text-stone-500">
+                    <span>Task Description</span>
+                    {editedTask.taskDescription !== "<p></p>" &&
+                    editedTask.taskDescription !== "" ? (
+                      <Button
+                        additionalClasses="px-3 h-7 py-0 font-normal"
+                        onClick={handleEditorActive}
+                      >
+                        {editedTask.taskDescription !== "<p></p>" &&
+                        editedTask.taskDescription !== ""
+                          ? isEditorActive
+                            ? "Cancel"
+                            : "Edit"
+                          : ""}
+                      </Button>
+                    ) : (
+                      ""
+                    )}
+                  </label>
+
+                  <span>
+                    {isModalLoader && (
+                      <span className="flex justify-center items-center h-full">
+                        <span className="loader-spinner w-9 h-9"></span>
+                      </span>
+                    )}
+                    {isEditorActive ||
+                    editedTask.taskDescription === "<p></p>" ? (
+                      <FroalaEditorComponent
+                        model={editedTask.taskDescription || "<p></p>"}
+                        value={editedTask.taskDescription || "<p></p>"}
+                        ref={taskDescRef}
+                        tag="textarea"
+                        config={{
+                          placeholderText: "Enter Task Description",
+                          charCounterCount: false,
+                          wordCounterCount: false,
+                          pluginsEnabled: [
+                            "align",
+                            "charCounter",
+                            "codeView",
+                            "colors",
+                            "entities",
+                            "fontFamily",
+                            "fontSize",
+                            "lists",
+                            "paragraphFormat",
+                            "paragraphStyle",
+                            "quote",
+                            "url",
+                            "link",
+                            "image",
+                            "table",
+                            "insertHR",
+                          ],
+                          imageUpload: true,
+                          imageMaxSize: 5 * 1024 * 1024,
+                          imageAllowedTypes: ["jpeg", "jpg", "png", "gif"],
+                          events: {
+                            "image.beforeUpload": function (files) {
+                              var editor = this;
+                              if (files.length) {
+                                // Create a File Reader.
+                                var reader = new FileReader();
+                                // Set the reader to insert images when they are loaded.
+                                reader.onload = function (e) {
+                                  var result = e.target.result;
+                                  editor.image.insert(
+                                    result,
+                                    null,
+                                    null,
+                                    editor.image.get()
+                                  );
+                                };
+                                // Read image as base64.
+                                reader.readAsDataURL(files[0]);
+                              }
+                              editor.popups.hideAll();
+                              // Stop default upload chain.
+                              return false;
+                            },
+                            "image.inserted": function ($img, response) {
+                              console.log("Image inserted:", $img, response);
+                            },
+                            "image.error": function (error) {
+                              console.error(
+                                "Froala image upload error:",
+                                error
+                              );
+                            },
+                          },
+                        }}
+                        onModelChange={(content) => {
+                          setEditedTask((prevState) => ({
+                            ...prevState,
+                            taskDescription: content,
+                          }));
+                          document.querySelectorAll("fr-file");
+                          setIsModalLoader(false);
+                        }}
+                      />
+                    ) : (
+                      <div
+                        contentEditable="false"
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          if (
+                            e.target.tagName === "A" ||
+                            e.target.tagName === "U"
+                          ) {
+                            return;
+                          }
+                          handleEditorActive();
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: editedTask.taskDescription || "<p></p>",
+                        }}
+                      ></div>
+                    )}
+                  </span>
+                </p>
               </Modal>
 
+              <span
+                className={`taskStatusValue ${taskStatusList.get(
+                  task.taskStatus
+                )} select-none cursor-pointer md:px-2 md:py-1 rounded-md md:right-0 right-14 md:m-0 mr-0 whitespace-nowrap`}
+                onClick={() => toggleDropdown(task.id)}
+              >
+                <div className="hidden md:block text-xs text-white font-bold text-center">
+                  {task.taskStatus}
+                </div>
+                <div
+                  className="text-xs text-white font-bold block md:hidden px-2 py-1 text-center"
+                  data-tooltip-id="dark_tooltip"
+                  data-tooltip-content={task.taskStatus}
+                  data-tooltip-place="top"
+                >
+                  {task.taskStatus.charAt(0)}
+                </div>
+                <div
+                  className="md:hidden"
+                  data-tooltip-id="dark_tooltip"
+                  data-tooltip-content="Status"
+                  data-tooltip-place="top"
+                ></div>
+                {activeDropdownId === task.id && (
+                  <DropDown
+                    currentStatus={task.taskStatus}
+                    isOpenDropDown={activeDropdownId === task.id}
+                    setIsOpenDropDown={setActiveDropdownId}
+                    onStatusChange={(newStatus) =>
+                      updateTaskStatus(task.id, newStatus)
+                    }
+                    dropDownList={taskStatusList}
+                  />
+                )}
+              </span>
               <span className="taskTitle w-full truncate flex md:gap-3 gap-2">
                 <span
                   className="truncate md:m-0 mr-0"
@@ -132,95 +280,15 @@ const Tasks = ({
                 >
                   {task.text}
                 </span>
-                <span
-                  className={`taskStatusValue ${taskStatusList.get(
-                    task.taskStatus
-                  )} select-none cursor-pointer md:px-2 md:py-1 rounded-md md:right-0 right-14 md:m-0 mr-0`}
-                  onClick={() => toggleDropdown(task.id)}
-                >
-                  <div className="hidden md:block text-xs text-white font-bold">
-                    {task.taskStatus}
-                  </div>
-                  <div className="text-xs text-white font-bold block md:hidden px-2 py-1">
-                    {task.taskStatus.charAt(0)}
-                  </div>
-                  <div
-                    className="md:hidden"
-                    data-tooltip-id="dark_tooltip"
-                    data-tooltip-content="Status"
-                    data-tooltip-place="top"
-                  >
-                    {/* <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                      className="size-6"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                      />
-                    </svg> */}
-                  </div>
-                  {activeDropdownId === task.id && (
-                    <DropDown
-                      currentStatus={task.taskStatus}
-                      isOpenDropDown={activeDropdownId === task.id}
-                      setIsOpenDropDown={setActiveDropdownId}
-                      onStatusChange={(newStatus) =>
-                        updateTaskStatus(task.id, newStatus)
-                      }
-                      dropDownList={taskStatusList}
-                    />
-                  )}
-                </span>
               </span>
 
               <div className="taskOptions mt-px gap-2 md:invisible flex md:absolute md:right-2">
-                {/* <span
-                  className="taskStatusOption cursor-pointer md:hidden"
-                  data-tooltip-id="taskStatus_tooltip"
-                  data-tooltip-content="Status"
-                  data-tooltip-place="top"
-                  onClick={() => toggleDropdown(task.id)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-stone-700"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-                    />
-                  </svg>
-
-                  <Tooltip id="taskStatus_tooltip" />
-                  {activeDropdownId === task.id && (
-                    <DropDown
-                      currentStatus={task.taskStatus}
-                      isOpenDropDown={activeDropdownId === task.id}
-                      setIsOpenDropDown={setActiveDropdownId}
-                      onStatusChange={(newStatus) =>
-                        updateTaskStatus(task.id, newStatus)
-                      }
-                      dropDownList={taskStatusList}
-                    />
-                  )}
-                </span> */}
                 <span
                   className="taskEditOption cursor-pointer"
                   data-tooltip-id="dark_tooltip"
                   data-tooltip-content="Edit"
                   data-tooltip-place="top"
-                  onClick={() => handleTaskEdit(task.id)}
+                  onClick={() => handleTaskEdit(task.id, task.description)}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -244,7 +312,6 @@ const Tasks = ({
                   >
                     <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
                   </svg>
-                  {/* <Tooltip id="taskEdit_tooltip" /> */}
                 </span>
                 <span
                   className="taskDeleteOption cursor-pointer"
@@ -279,43 +346,8 @@ const Tasks = ({
                       clipRule="evenodd"
                     />
                   </svg>
-                  {/* <Tooltip id="taskDelete_tooltip" /> */}
                 </span>
               </div>
-              {/* <span
-                className="taskStatusOption cursor-pointer"
-                data-tooltip-id="taskStatus_tooltip"
-                data-tooltip-content="Status"
-                data-tooltip-place="top"
-                onClick={() => toggleDropdown(task.id)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  className="onNormal text-slate-700"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
-                  />
-                </svg>
-                <Tooltip id="taskStatus_tooltip" />
-                {activeDropdownId === task.id && (
-                  <DropDown
-                    currentStatus={task.taskStatus}
-                    isOpenDropDown={activeDropdownId === task.id}
-                    setIsOpenDropDown={setActiveDropdownId}
-                    onStatusChange={(newStatus) =>
-                      updateTaskStatus(task.id, newStatus)
-                    }
-                    dropDownList={taskStatusList}
-                  />
-                )}
-              </span> */}
             </li>
           ))}
         </ul>
