@@ -1,6 +1,6 @@
 import NewTask from "./NewTask";
 import Modal from "./Modal";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Input from "./Input";
 import DropDown from "./DropDown";
 import Button from "./Button";
@@ -70,6 +70,15 @@ const Tasks = ({
     !isEditorActive ? setIsModalLoader(true) : setIsModalLoader(false);
     setIsEditorActive(!isEditorActive);
   }
+
+  useEffect(() => {
+    if (!isEditorActive) {
+      var fe = Array.from(document.querySelectorAll("p")).filter((i) =>
+        i.hasAttribute("data-f-id")
+      );
+      fe.map((e) => (e.style.display = "none"));
+    }
+  }, [isEditorActive]);
 
   return (
     <section>
