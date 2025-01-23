@@ -1,5 +1,5 @@
 import NewTask from "./NewTask";
-import Modal from "./Modal";
+import Modal from "./ModalV2";
 import { useRef, useState, useEffect } from "react";
 import Input from "./Input";
 import DropDown from "./DropDown";
@@ -37,8 +37,12 @@ const Tasks = ({
   taskStatusList.set("On Hold", "bg-red-700");
 
   function handleTaskEdit(taskId, taskDesc) {
+    console.log("edited task");
+
     const taskToEdit = tasks.find((task) => task.id === taskId);
     if (taskToEdit) {
+      document.body.style.overflow = "hidden";
+      hideElement();
       taskDesc && setIsEditorActive(false);
       setEditedTask({
         taskTitle: taskToEdit.text || "",
@@ -69,16 +73,27 @@ const Tasks = ({
   function handleEditorActive() {
     !isEditorActive ? setIsModalLoader(true) : setIsModalLoader(false);
     setIsEditorActive(!isEditorActive);
+    setTimeout(() => {
+      setIsModalLoader(false);
+    }, 500);
+  }
+
+  function hideElement() {
+    var fe = Array.from(document.querySelectorAll("p")).filter((i) =>
+      i.hasAttribute("data-f-id")
+    );
+    var hideFE = fe.map((e) => (e.style.display = "none"));
+
+    return hideFE;
   }
 
   useEffect(() => {
-    if (!isEditorActive) {
-      var fe = Array.from(document.querySelectorAll("p")).filter((i) =>
-        i.hasAttribute("data-f-id")
-      );
-      fe.map((e) => (e.style.display = "none"));
-    }
-  }, [isEditorActive]);
+    hideElement();
+
+    // console.log(editedTask.taskDescription, isEditorActive);
+  }, [isEditorActive, editedTask.taskDescription]);
+
+  useEffect(() => {}, []);
 
   return (
     <section>
@@ -96,155 +111,6 @@ const Tasks = ({
               key={task.id}
               className="tasksAdded flex gap-2 justify-between px-2 pb-2 mb-4 border-b-2 items-center relative transition-all"
             >
-              <Modal
-                headingText="Edit Task"
-                ref={modal}
-                buttonCaption="Save"
-                isCancel={true}
-                onClick={handleSaveEditedTask}
-              >
-                <Input
-                  type="text"
-                  labelName="Task Name"
-                  ref={taskTitleRef}
-                  isEditing={undefined}
-                  placeholder="Enter Task Name"
-                  required
-                  value={editedTask.taskTitle}
-                  onChange={(e) => {
-                    setEditedTask((prevState) => {
-                      return {
-                        ...prevState,
-                        taskTitle: e.target.value,
-                      };
-                    });
-                  }}
-                />
-
-                <p className="descriptionWrapper flex flex-col gap-2 my-4 relative">
-                  <label className="flex justify-between items-center text-sm font-bold uppercase text-stone-500">
-                    <span>Task Description</span>
-                    {editedTask.taskDescription !== "<p></p>" &&
-                    editedTask.taskDescription !== "" ? (
-                      <Button
-                        additionalClasses="px-3 h-7 py-0 font-normal"
-                        onClick={handleEditorActive}
-                      >
-                        {editedTask.taskDescription !== "<p></p>" &&
-                        editedTask.taskDescription !== ""
-                          ? isEditorActive
-                            ? "Cancel"
-                            : "Edit"
-                          : ""}
-                      </Button>
-                    ) : (
-                      ""
-                    )}
-                  </label>
-
-                  <span>
-                    {isModalLoader && (
-                      <span className="flex justify-center items-center h-full">
-                        <span className="loader-spinner w-9 h-9"></span>
-                      </span>
-                    )}
-                    {isEditorActive ||
-                    editedTask.taskDescription === "<p></p>" ? (
-                      <FroalaEditorComponent
-                        model={editedTask.taskDescription || "<p></p>"}
-                        value={editedTask.taskDescription || "<p></p>"}
-                        ref={taskDescRef}
-                        tag="textarea"
-                        config={{
-                          placeholderText: "Enter Task Description",
-                          charCounterCount: false,
-                          wordCounterCount: false,
-                          pluginsEnabled: [
-                            "align",
-                            "charCounter",
-                            "codeView",
-                            "colors",
-                            "entities",
-                            "fontFamily",
-                            "fontSize",
-                            "lists",
-                            "paragraphFormat",
-                            "paragraphStyle",
-                            "quote",
-                            "url",
-                            "link",
-                            "image",
-                            "table",
-                            "insertHR",
-                          ],
-                          imageUpload: true,
-                          imageMaxSize: 5 * 1024 * 1024,
-                          imageAllowedTypes: ["jpeg", "jpg", "png", "gif"],
-                          events: {
-                            "image.beforeUpload": function (files) {
-                              var editor = this;
-                              if (files.length) {
-                                // Create a File Reader.
-                                var reader = new FileReader();
-                                // Set the reader to insert images when they are loaded.
-                                reader.onload = function (e) {
-                                  var result = e.target.result;
-                                  editor.image.insert(
-                                    result,
-                                    null,
-                                    null,
-                                    editor.image.get()
-                                  );
-                                };
-                                // Read image as base64.
-                                reader.readAsDataURL(files[0]);
-                              }
-                              editor.popups.hideAll();
-                              // Stop default upload chain.
-                              return false;
-                            },
-                            "image.inserted": function ($img, response) {
-                              console.log("Image inserted:", $img, response);
-                            },
-                            "image.error": function (error) {
-                              console.error(
-                                "Froala image upload error:",
-                                error
-                              );
-                            },
-                          },
-                        }}
-                        onModelChange={(content) => {
-                          setEditedTask((prevState) => ({
-                            ...prevState,
-                            taskDescription: content,
-                          }));
-                          document.querySelectorAll("fr-file");
-                          setIsModalLoader(false);
-                        }}
-                      />
-                    ) : (
-                      <div
-                        contentEditable="false"
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          if (
-                            e.target.tagName === "A" ||
-                            e.target.tagName === "U"
-                          ) {
-                            return;
-                          }
-                          handleEditorActive();
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: editedTask.taskDescription || "<p></p>",
-                        }}
-                      ></div>
-                    )}
-                  </span>
-                </p>
-              </Modal>
-
               <span
                 className={`taskStatusValue ${taskStatusList.get(
                   task.taskStatus
@@ -280,7 +146,10 @@ const Tasks = ({
                   />
                 )}
               </span>
-              <span className="taskTitle w-full truncate flex md:gap-3 gap-2">
+              <span
+                className="taskTitle w-full truncate flex md:gap-3 gap-2 cursor-pointer"
+                onClick={() => handleTaskEdit(task.id, task.description)}
+              >
                 <span
                   className="truncate md:m-0 mr-0"
                   data-tooltip-id="tooltip_dynamic"
@@ -361,6 +230,150 @@ const Tasks = ({
           ))}
         </ul>
       )}
+
+      <Modal
+        headingText="Edit Task"
+        ref={modal}
+        buttonCaption="Save"
+        isCancel={true}
+        onClick={handleSaveEditedTask}
+      >
+        <Input
+          type="text"
+          labelName="Task Name"
+          ref={taskTitleRef}
+          isEditing={undefined}
+          placeholder="Enter Task Name"
+          required
+          value={editedTask.taskTitle}
+          onChange={(e) => {
+            setEditedTask((prevState) => {
+              return {
+                ...prevState,
+                taskTitle: e.target.value,
+              };
+            });
+          }}
+        />
+
+        <p className="descriptionWrapper flex flex-col gap-2 my-4 relative">
+          <label className="flex justify-between items-center text-sm font-bold uppercase text-stone-500">
+            <span>Task Description</span>
+            {editedTask.taskDescription !== "<p></p>" &&
+            editedTask.taskDescription !== "" ? (
+              <Button
+                additionalClasses="px-3 h-7 py-0 font-normal"
+                onClick={handleEditorActive}
+              >
+                {editedTask.taskDescription !== "<p></p>" &&
+                editedTask.taskDescription !== ""
+                  ? isEditorActive
+                    ? "Cancel"
+                    : "Edit"
+                  : ""}
+              </Button>
+            ) : (
+              ""
+            )}
+          </label>
+
+          <span>
+            {isModalLoader && (
+              <span className="flex justify-center items-center h-full">
+                <span className="loader-spinner w-9 h-9"></span>
+              </span>
+            )}
+            {isEditorActive || editedTask.taskDescription === "<p></p>" ? (
+              !isModalLoader && (
+                <FroalaEditorComponent
+                  model={editedTask.taskDescription || "<p></p>"}
+                  value={editedTask.taskDescription || "<p></p>"}
+                  ref={taskDescRef}
+                  tag="textarea"
+                  config={{
+                    placeholderText: "Enter Task Description",
+                    charCounterCount: false,
+                    wordCounterCount: false,
+                    pluginsEnabled: [
+                      "align",
+                      "charCounter",
+                      "codeView",
+                      "colors",
+                      "entities",
+                      "fontFamily",
+                      "fontSize",
+                      "lists",
+                      "paragraphFormat",
+                      "paragraphStyle",
+                      "quote",
+                      "url",
+                      "link",
+                      "image",
+                      "table",
+                      "insertHR",
+                    ],
+                    imageUpload: true,
+                    imageMaxSize: 5 * 1024 * 1024,
+                    imageAllowedTypes: ["jpeg", "jpg", "png", "gif"],
+                    events: {
+                      "image.beforeUpload": function (files) {
+                        var editor = this;
+                        if (files.length) {
+                          // Create a File Reader.
+                          var reader = new FileReader();
+                          // Set the reader to insert images when they are loaded.
+                          reader.onload = function (e) {
+                            var result = e.target.result;
+                            editor.image.insert(
+                              result,
+                              null,
+                              null,
+                              editor.image.get()
+                            );
+                          };
+                          // Read image as base64.
+                          reader.readAsDataURL(files[0]);
+                        }
+                        editor.popups.hideAll();
+                        // Stop default upload chain.
+                        return false;
+                      },
+                      "image.inserted": function ($img, response) {
+                        console.log("Image inserted:", $img, response);
+                      },
+                      "image.error": function (error) {
+                        console.error("Froala image upload error:", error);
+                      },
+                    },
+                  }}
+                  onModelChange={(content) => {
+                    setEditedTask((prevState) => ({
+                      ...prevState,
+                      taskDescription: content,
+                    }));
+                    document.querySelectorAll("fr-file");
+                    setIsModalLoader(false);
+                  }}
+                />
+              )
+            ) : (
+              <div
+                contentEditable="false"
+                className="cursor-pointer"
+                onClick={(e) => {
+                  if (e.target.tagName === "A" || e.target.tagName === "U") {
+                    return;
+                  }
+                  handleEditorActive();
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: editedTask.taskDescription || "<p></p>",
+                }}
+              ></div>
+            )}
+          </span>
+        </p>
+      </Modal>
     </section>
   );
 };
