@@ -1,5 +1,4 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
-import { createPortal } from "react-dom";
 import Button from "./Button";
 
 const Modal = forwardRef(
@@ -31,10 +30,10 @@ const Modal = forwardRef(
       document.body.style.overflow = "auto";
     }
 
-    return createPortal(
+    return (
       <dialog
         ref={dialog}
-        className="backdrop:bg-stone-900/90 rounded-md shadow-md"
+        className="backdrop:bg-stone-900/90 rounded-md shadow-md modalv2"
       >
         <h2
           className={`text-xl font-bold text-stone-700 border-b-2 border-stone-300 px-5 py-3 flex justify-between items-center ${headerAdditionClasses}`}
@@ -73,8 +72,7 @@ const Modal = forwardRef(
             </Button>
           </div>
         </form>
-      </dialog>,
-      document.getElementById("modal-root")
+      </dialog>
     );
   }
 );
