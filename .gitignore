@@ -11,6 +11,7 @@ node_modules
 Options.jsx
 package-lock.json
 package.json
+redux
 .env
 dist
 dist-ssr
