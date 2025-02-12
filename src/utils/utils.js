@@ -1,4 +1,4 @@
-function getFirstCharcters(str) {
+export function getFirstCharcters(str) {
   const userProfileVal =
     str.split(" ").length > 1
       ? str.split(" ")[0].charAt(0) +
@@ -8,4 +8,6 @@ function getFirstCharcters(str) {
   return userProfileVal;
 }
 
-export default getFirstCharcters;
+export function getDeepCopyObj(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}

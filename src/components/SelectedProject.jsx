@@ -9,6 +9,7 @@ const SelectedProject = ({
   tasks,
   onBack,
   updateTaskStatus,
+  allUserData
 }) => {
   const formattedDate = new Date(project.dueDate).toLocaleDateString("en-US", {
     year: "numeric",
@@ -46,6 +47,7 @@ const SelectedProject = ({
             onEditTask={onEditTask}
             tasks={tasks}
             updateTaskStatus={updateTaskStatus}
+            allUserData={allUserData}
           />
         </div>
       </div>

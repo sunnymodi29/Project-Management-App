@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NewProject from "./components/NewProject";
 import NoProjectSelected from "./components/NoProjectSelected";
 import ProjectsSidebar from "./components/ProjectsSidebar";
@@ -11,6 +11,7 @@ import {
   updateDoc,
   setDoc,
   getDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { v4 as uuid } from "uuid";
 import {
@@ -28,6 +29,8 @@ import { Tooltip } from "react-tooltip";
 
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+
+import { getDeepCopyObj } from "./utils/utils";
 
 const db = getFirestore(app);
 
@@ -48,6 +51,96 @@ function App() {
   const [logoutMode, setLogoutMode] = useState(false);
   const [editedProject, setEditedProject] = useState();
   const [userProfile, setUserProfile] = useState("");
+  const updateUserOnceFlag = useRef(false);
+  const [allUserData, setAllUserData] = useState({});
+
+  async function setUsersDetails(
+    email,
+    password,
+    username,
+    isSignUp,
+    googleSignIn,
+    googleUserObj
+  ) {
+    const allUserDetailsDoc = doc(db, "usersData", "allUserDetails");
+
+    let userObj = {
+      email: email,
+      password: password,
+      userProfile: null,
+    };
+
+    if (isSignUp) {
+      userObj = {
+        ...userObj,
+        username: username,
+      };
+    } else if (googleSignIn) {
+      userObj = {
+        ...userObj,
+        userProfile: getDeepCopyObj(googleUserObj),
+      };
+    }
+
+    try {
+      const docSnapshot = await getDoc(allUserDetailsDoc);
+
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data();
+        const users = data.users || [];
+
+        const isEmailPresent = users.some((user) => user.email === email);
+
+        if (!isEmailPresent) {
+          await updateDoc(allUserDetailsDoc, {
+            users: arrayUnion(userObj),
+          });
+        }
+      }
+      console.log("Updated Success");
+    } catch {
+      console.log("Updated Failed");
+    }
+  }
+
+  async function updateUserDetails(userObj) {
+    const allUserDetailsDoc = doc(db, "usersData", "allUserDetails");
+    const userDoc = await getDoc(allUserDetailsDoc);
+
+    var userData = userDoc.data();
+    const users = userData.users;
+
+    const currentUserIndex = users.findIndex(
+      (user) => user.email === userProfile.email
+    );
+
+    if (currentUserIndex === -1) {
+      console.error("User not found in data.");
+      return;
+    }
+    const currentUser = users[currentUserIndex];
+
+    const updatedUserProfile = {
+      ...currentUser.userProfile,
+      ...userObj,
+    };
+
+    const sanitizedUpdates = getDeepCopyObj(updatedUserProfile);
+
+    currentUser.userProfile = sanitizedUpdates;
+
+    users[currentUserIndex] = currentUser;
+
+    await updateDoc(allUserDetailsDoc, { users });
+    console.log("rendered");
+  }
+
+  async function getAllUserDetails() {
+    const allUserDetailsDoc = doc(db, "usersData", "allUserDetails");
+    const userDoc = await getDoc(allUserDetailsDoc);
+    setAllUserData(getDeepCopyObj(userDoc.data()));
+    return allUserData;
+  }
 
   /* User Login, SignUp, Logout And User Wise Data Logic Starts */
 
@@ -57,6 +150,7 @@ function App() {
       setIsLoading(true);
       try {
         await signInWithEmailAndPassword(auth, email, password);
+        setUsersDetails(email, password);
         Toastify({
           toastType: "success",
           message: "Logged In Successfully!",
@@ -81,6 +175,14 @@ function App() {
       const result = await Promise.race([signInWithPopup(auth, provider)]);
       const user = result.user;
 
+      setUsersDetails(
+        user.email,
+        "googlePassword",
+        user.displayName,
+        false,
+        true,
+        user
+      );
       setUser(user);
       setIsAuthenticated(true);
       Toastify({ toastType: "success", message: "Logged in Successfully!" });
@@ -100,6 +202,7 @@ function App() {
         const user = userCredential.user;
 
         await updateProfile(user, { displayName: username });
+        setUsersDetails(email, password, username, true);
 
         Toastify({ toastType: "success", message: "Signed Up Successfully!" });
 
@@ -165,6 +268,8 @@ function App() {
         };
 
         setProjectsState(validatedState);
+        console.log(fetchedData);
+        
       } else {
         await setDoc(userDocRef, initialUserData);
         setProjectsState(initialUserData);
@@ -181,7 +286,15 @@ function App() {
   // Automatically save updated `projectsState` to Firestore
   useEffect(() => {
     async function saveUserData() {
-      if (!user || !isAuthenticated || !isDataLoaded || logoutMode) return;
+      // updateUserOnceFlag.current ||
+      if (
+        updateUserOnceFlag.current ||
+        !user ||
+        !isAuthenticated ||
+        !isDataLoaded ||
+        logoutMode
+      )
+        return;
 
       try {
         const userDocRef = doc(db, "projectsData", user.uid);
@@ -195,6 +308,9 @@ function App() {
         };
 
         await updateDoc(userDocRef, validState);
+        await updateUserDetails(user);
+        // getAllUserDetails();
+        updateUserOnceFlag.current = true;
       } catch (error) {
         Toastify({ toastType: "error", message: error.message });
       }
@@ -203,6 +319,9 @@ function App() {
     if (isAuthenticated && user) {
       saveUserData();
     }
+    return () => {
+      updateUserOnceFlag.current = false;
+    };
   }, [projectsState, user, isAuthenticated, isDataLoaded, logoutMode]);
 
   // Logout Handler
@@ -217,6 +336,7 @@ function App() {
       setUser(null);
       setLogoutMode(false);
       setIsDataLoaded(true);
+      updateUserOnceFlag.current = false;
       Toastify({ toastType: "success", message: "Logged Out Successfully!" });
     } catch (error) {
       Toastify({ toastType: "error", message: error.message });
@@ -491,7 +611,7 @@ function App() {
   }
 
   function handleEditTask(taskId, editedTaskObj) {
-    const { taskTitle, taskDescription } = editedTaskObj;
+    const { taskTitle, taskDescription, taskAssignedTo } = editedTaskObj;
     if (!taskTitle) {
       Toastify({
         toastType: "error",
@@ -510,7 +630,12 @@ function App() {
       if (!isDuplicateTask) {
         const updatedTasks = prevState.projectsDetails.tasks.map((task) =>
           task.id === taskId && task.projectId === prevState.selectedProjectId
-            ? { ...task, text: taskTitle, description: taskDescription }
+            ? {
+                ...task,
+                text: taskTitle,
+                description: taskDescription,
+                taskAssignedTo: taskAssignedTo,
+              }
             : task
         );
 
@@ -597,6 +722,7 @@ function App() {
       tasks={selectedProjectTasks}
       onBack={handleBack}
       updateTaskStatus={handleTaskStatus}
+      allUserData={getAllUserDetails}
     />
   );
 

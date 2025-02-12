@@ -8,6 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+Options.jsx
+package-lock.json
+package.json
+.env
 dist
 dist-ssr
 *.local

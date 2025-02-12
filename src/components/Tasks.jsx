@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Input from "./Input";
 import DropDown from "./DropDown";
 import Button from "./Button";
-import getFirstCharcters from "../utils/utils";
+import { getFirstCharcters } from "../utils/utils";
 
 import FroalaEditorComponent from "react-froala-wysiwyg";
 import "froala-editor/js/plugins.pkgd.min.js";
@@ -17,6 +17,7 @@ const Tasks = ({
   onEditTask,
   tasks,
   updateTaskStatus,
+  allUserData,
 }) => {
   const modal = useRef();
   const taskTitleRef = useRef();
@@ -24,11 +25,14 @@ const Tasks = ({
   const [editedTask, setEditedTask] = useState({
     taskTitle: "",
     taskDescription: "",
+    taskAssignedTo: [],
   });
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [isEditorActive, setIsEditorActive] = useState(true);
   const [isModalLoader, setIsModalLoader] = useState(false);
+  const [userDataState, setUserDataState] = useState({});
+  const [selectedUsersArray, setSelectedUsersArray] = useState([]);
 
   const taskStatusList = new Map();
   taskStatusList.set("Not Selected", "bg-stone-700");
@@ -36,18 +40,19 @@ const Tasks = ({
   taskStatusList.set("Completed", "bg-green-700");
   taskStatusList.set("On Hold", "bg-red-700");
 
-  function handleTaskEdit(taskId, taskDesc) {
-    console.log("edited task");
-
+  async function handleTaskEdit(taskId, taskDesc) {
     const taskToEdit = tasks.find((task) => task.id === taskId);
     if (taskToEdit) {
+      getAllUserData();
       document.body.style.overflow = "hidden";
       hideElement();
       taskDesc && setIsEditorActive(false);
       setEditedTask({
         taskTitle: taskToEdit.text || "",
         taskDescription: taskToEdit.description || "<p></p>",
+        taskAssignedTo: taskToEdit.taskAssignedTo || [],
       });
+      setSelectedUsersArray(taskToEdit.taskAssignedTo);
       setEditingTaskId(taskId);
       modal.current.open();
       document.activeElement.blur();
@@ -61,6 +66,7 @@ const Tasks = ({
     setEditedTask({
       taskTitle: "",
       taskDescription: "",
+      taskAssignedTo: [],
     });
   }
 
@@ -89,11 +95,34 @@ const Tasks = ({
 
   useEffect(() => {
     hideElement();
-
-    // console.log(editedTask.taskDescription, isEditorActive);
   }, [isEditorActive, editedTask.taskDescription]);
 
-  useEffect(() => {}, []);
+  async function getAllUserData() {
+    const data = await allUserData();
+    setUserDataState(data);
+  }
+
+  useEffect(() => {
+    getAllUserData();
+  }, []);
+
+  function handleSelectedUsers(e) {
+    let temp = selectedUsersArray;
+    const element = e.target;
+    const username = element.getAttribute("data-username");
+
+    if (element.classList.contains("selectedUser")) {
+      temp = selectedUsersArray.filter((user) => user !== username);
+    } else {
+      temp = [...(selectedUsersArray || []), username];
+    }
+
+    setSelectedUsersArray(temp);
+    setEditedTask((prevState) => ({
+      ...prevState,
+      taskAssignedTo: temp,
+    }));
+  }
 
   return (
     <section>
@@ -256,7 +285,30 @@ const Tasks = ({
           }}
         />
 
-        <p className="descriptionWrapper flex flex-col gap-2 my-4 relative">
+        <label>Assigned To</label>
+        <section className="flex relative">
+          {userDataState?.users?.map((u) => {
+            return (
+              <div
+                className={`max-w-8 max-h-8 bg-stone-400 p-4 flex justify-center items-center rounded-full select-none cursor-pointer text-md font-bold text-stone-700 uppercase ${
+                  selectedUsersArray?.includes(u.userProfile.displayName)
+                    ? "selectedUser"
+                    : "hover:opacity-85"
+                }`}
+                key={u.userProfile.displayName}
+                data-username={u.userProfile.displayName}
+                onClick={handleSelectedUsers}
+                data-tooltip-id="dark_tooltip"
+                data-tooltip-content={u.userProfile.displayName}
+                data-tooltip-place="top"
+              >
+                {getFirstCharcters(u.userProfile.displayName)}
+              </div>
+            );
+          })}
+        </section>
+
+        <section className="descriptionWrapper flex flex-col gap-2 my-4 relative">
           <label className="flex justify-between items-center text-sm font-bold uppercase text-stone-500">
             <span>Task Description</span>
             {editedTask.taskDescription !== "<p></p>" &&
@@ -372,7 +424,7 @@ const Tasks = ({
               ></div>
             )}
           </span>
-        </p>
+        </section>
       </Modal>
     </section>
   );

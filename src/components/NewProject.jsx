@@ -81,7 +81,7 @@ const NewProject = ({ onAdd, onCancel, onEdit, startEdit }) => {
             isEditing={startEdit}
             placeholder="Enter Project Title"
             required
-            maxlength={70}
+            maxLength={70}
             ref={titleRef}
           />
           <Input

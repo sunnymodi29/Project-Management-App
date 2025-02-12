@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import Button from "./Button";
 import Modal from "./Modal";
 import { Tooltip } from "react-tooltip";
-import getFirstCharcters from "../utils/utils";
+import { getFirstCharcters } from "../utils/utils";
 // import Options from "./Options";
 
 function ProjectsSidebar({
@@ -219,14 +219,7 @@ function ProjectsSidebar({
           onClick={toggleSidebar}
         >
           <div className="flex justify-between items-center mb-8">
-            <div
-              className="flex justify-center items-center gap-2"
-              data-tooltip-id={isLongUserName ? "dark_tooltip" : null}
-              data-tooltip-content={
-                isLongUserName ? userProfileTooltipVal : null
-              }
-              data-tooltip-place="bottom"
-            >
+            <div className="flex justify-center items-center gap-2">
               <div
               // data-tooltip-id="dark_tooltip"
               // data-tooltip-content={userProfileTooltipVal}
@@ -313,7 +306,9 @@ function ProjectsSidebar({
             Your Projects
           </h2>
           <div>
-            <Button type="save" onClick={onStartAddProject}>+ Add Project</Button>
+            <Button type="save" onClick={onStartAddProject}>
+              + Add Project
+            </Button>
           </div>
           <ul className="mt-5 overflow-auto">
             {projects.map((project) => {

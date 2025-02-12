@@ -38,7 +38,7 @@
 /* Tooltip CSS Starts */
 .styles-module_dark__xNqje {
   background: #000 !important;
-  z-index: 99999;
+  z-index: 1000000 !important;
 }
 
 .styles-module_tooltip__mnnfp {
@@ -177,6 +177,13 @@ dialog {
   width: 90%;
   max-width: 900px;
   animation: fadeIn 0.5s;
+  overflow: visible;
+}
+
+dialog::backdrop {
+  z-index: 0;
+  /* Ensure backdrop is rendered below the tooltip */
+  /* background: rgba(0, 0, 0, 0.5); Add transparency to maintain the modal effect */
 }
 
 dialog .contentWrapper {
@@ -200,6 +207,7 @@ img {
     opacity: 0;
     transform: translateY(-30%);
   }
+
   to {
     opacity: 1;
     transform: translateY(0px);
@@ -240,6 +248,7 @@ aside {
   .sidebar.slide-in {
     transform: translateX(0);
   }
+
   .tasksAdded:hover .taskTitle span {
     width: 100%;
   }
@@ -282,12 +291,15 @@ aside {
 /* Sidebar Animations */
 .sidebar {
   /* position: fixed; */
-  height: 100vh; /* Ensures full height */
-  width: 300px; /* Adjust width as needed */
+  height: 100vh;
+  /* Ensures full height */
+  width: 300px;
+  /* Adjust width as needed */
   top: 0;
   left: 0;
   /* transform: translateX(-100%); */
-  background-color: #1c1917; /* Adjust background color */
+  background-color: #1c1917;
+  /* Adjust background color */
   transition: transform 0.3s ease-in-out;
   z-index: 50;
 }
@@ -335,14 +347,14 @@ aside {
   width: 0;
 }
 
-#fr-logo > span {
+#fr-logo>span {
   visibility: hidden;
   width: 0;
   padding: 0;
   font-size: 1px;
 }
 
-#fr-logo > svg {
+#fr-logo>svg {
   display: none;
 }
 
@@ -372,11 +384,11 @@ aside {
   font-size: 14px;
 }
 
-.fr-view .fr-file::after{
+.fr-view .fr-file::after {
   display: none;
 }
 
-.fr-quick-insert{
+.fr-quick-insert {
   display: none;
 }
 
@@ -384,6 +396,32 @@ aside {
   display: none !important;
 }
 
-.fr-wrapper div.fr-element{
+.fr-wrapper div.fr-element {
   display: block !important;
+}
+
+.selectedUser {
+  background: #b6f9b6a5;
+  position: relative;
+  background: #010401de;
+  transition: all 0.2s ease-in-out;
+}
+
+.selectedUser::after {
+  content: '\2713';
+  display: inline-block;
+  /* position: absolute; */
+  /* transform: rotate(45deg);
+  height: 24px;
+  width: 12px;
+  border-bottom: 7px solid #78b13f;
+  border-right: 7px solid #78b13f; */
+  /* background: #00000092; */
+  display: flex;
+  position: absolute;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
 }

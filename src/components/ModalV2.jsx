@@ -54,7 +54,7 @@ const Modal = forwardRef(
           method="dialog"
           className="text-right px-5 border-t-2 border-stone-300 p-3"
         >
-          <div
+          <section
             className="flex justify-end gap-3
           "
           >
@@ -70,7 +70,7 @@ const Modal = forwardRef(
             <Button additionalClasses="h-9 py-0 px-4" {...props}>
               {buttonCaption}
             </Button>
-          </div>
+          </section>
         </form>
       </dialog>
     );
