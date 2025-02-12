@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@firebase/firestore": "^4.7.5",
+    "@reduxjs/toolkit": "^2.5.1",
     "firebase": "^11.0.2",
     "font-awesome": "^4.7.0",
     "quill": "^2.0.3",
@@ -18,8 +19,10 @@
     "react-dom": "^18.2.0",
     "react-froala-wysiwyg": "^4.3.1",
     "react-quill": "^2.0.0",
+    "react-redux": "^9.2.0",
     "react-toastify": "^10.0.6",
     "react-tooltip": "^5.28.0",
+    "redux": "^5.0.1",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
